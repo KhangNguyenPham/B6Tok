@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>TikTok BB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, #000 0%, rgba(0,0,0,0.95) 100%);
+            padding: 8px 10px;
+            z-index: 1000;
+            border-bottom: 1px solid #222;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 10px 14px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #ff0050;
+        }
+
+        .btn-search {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #ff0050 0%, #d90040 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            background: #111;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #ff0050 0%, #d90040 100%);
+            color: #fff;
+        }
+
+        .content {
+            margin-top: 145px;
+            padding: 0 8px 20px 8px;
+            min-height: calc(100vh - 145px);
+        }
+
+        .video-item {
+            background: #111;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #222;
+        }
+
+        .video-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            gap: 10px;
+            background: #1a1a1a;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #222;
+            border: 2px solid #ff0050;
+            object-fit: cover;
+        }
+
+        .author-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .author-name {
+            font-weight: 700;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .author-username {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+            min-height: 200px;
+        }
+
+        .video-cover {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: pointer;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+
+        .play-btn {
+            width: 64px;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+
+        .caption {
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #e0e0e0;
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            padding: 10px 12px;
+            border-top: 1px solid #222;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #222;
+            border-top-color: #ff0050;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .load-more-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .btn-load-more {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #ff0050 0%, #d90040 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 0, 80, 0.3);
+        }
+
+        .btn-load-more:active {
+            transform: scale(0.95);
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ff0050;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .empty-text {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 2000;
+            border: 1px solid #333;
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🎬 B6Tok</div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Tìm kiếm..." autocomplete="off">
+            <button class="btn-search" id="btnSearch">Tìm</button>
+        </div>
+        <div class="tabs">
+            <button class="tab active" id="tabSearch">🔍 Tìm kiếm</button>
+            <button class="tab" id="tabTrending">🔥 Trending</button>
+        </div>
+    </div>
+
+    <div class="content" id="content">
+        <div class="empty">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-text">Nhập từ khóa để tìm kiếm video TikTok<br>hoặc xem tab Trending</div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const CONFIG = {
+            // API_URL: 'http://localhost:3000/api',
+            API_URL: 'https://b6-tok.vercel.app/api',
+        };
+
+        let state = {
+            currentTab: 'search',
+            currentQuery: '',
+            allVideos: [],
+            isLoading: false,
+            observer: null,
+            currentCursor: 0,
+        };
+
+        const searchInput = document.getElementById('searchInput');
+        const btnSearch = document.getElementById('btnSearch');
+        const tabSearch = document.getElementById('tabSearch');
+        const tabTrending = document.getElementById('tabTrending');
+        const content = document.getElementById('content');
+        const toast = document.getElementById('toast');
+
+        btnSearch.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+        tabSearch.addEventListener('click', () => switchTab('search'));
+        tabTrending.addEventListener('click', () => switchTab('trending'));
+
+        function switchTab(tab) {
+            if (state.isLoading) return;
+            
+            state.currentTab = tab;
+            state.allVideos = [];
+            state.currentCursor = 0;
+            state.currentQuery = '';
+            
+            tabSearch.classList.toggle('active', tab === 'search');
+            tabTrending.classList.toggle('active', tab === 'trending');
+            
+            if (tab === 'trending') {
+                loadTrending();
+            } else {
+                showEmpty();
+            }
+        }
+
+        async function handleSearch() {
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                showToast('⚠️ Nhập từ khóa tìm kiếm');
+                return;
+            }
+            
+            state.allVideos = [];
+            state.currentCursor = 0;
+            state.currentQuery = query;
+            
+            await fetchVideos(`${CONFIG.API_URL}/search?q=${encodeURIComponent(query)}`, true);
+        }
+
+        async function loadTrending() {
+            state.allVideos = [];
+            state.currentCursor = 0;
+            state.currentQuery = '';
+            await fetchVideos(`${CONFIG.API_URL}/trending`, true);
+        }
+
+        async function loadMore() {
+            if (state.currentTab === 'trending') {
+                await fetchVideos(`${CONFIG.API_URL}/trending`, false);
+            } else if (state.currentQuery) {
+                await fetchVideos(`${CONFIG.API_URL}/search?q=${encodeURIComponent(state.currentQuery)}`, false);
+            }
+        }
+
+        async function fetchVideos(url, isNewSearch = true) {
+            if (state.isLoading) return;
+            
+            if (isNewSearch) {
+                showLoading('Đang tải...');
+            } else {
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+
+                if (loadMoreBtn) {
+                    loadMoreBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto;"></div>';
+                    loadMoreBtn.disabled = true;
+                }
+            }
+            
+            state.isLoading = true;
+            
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (!res.ok || data.error) throw new Error(data.error || 'Lỗi tải dữ liệu');
+                
+                if (!data.videos || data.videos.length === 0) {
+                    if (isNewSearch) {
+                        showEmpty('Không có video');
+                    } else {
+                        showToast('Không có thêm video mới');
+                    }
+
+                    return;
+                }
+                
+                const existingIds = new Set(state.allVideos.map(v => v.id));
+                const newVideos = data.videos.filter(v => !existingIds.has(v.id));
+                
+                if (newVideos.length === 0 && !isNewSearch) {
+                    showToast('Không có thêm video mới (trùng lặp)');
+                    renderVideos();
+
+                    return;
+                }
+                
+                state.allVideos = [...state.allVideos, ...newVideos];
+                state.currentCursor += newVideos.length;
+                
+                renderVideos();
+                
+                if (isNewSearch) {
+                    showToast(`${data.videos.length} video`);
+                    window.scrollTo(0, 0);
+                } else {
+                    showToast(`Thêm ${newVideos.length} video mới`);
+                }
+                
+            } catch (err) {
+                console.error('Fetch error:', err);
+                if (isNewSearch) {
+                    showError(err.message);
+                } else {
+                    showToast(err.message);
+                    renderVideos();
+                }
+            } finally {
+                state.isLoading = false;
+            }
+        }
+
+        function renderVideos() {
+            content.innerHTML = '';
+            cleanupObserver();
+            
+            if (state.allVideos.length === 0) {
+                showEmpty();
+
+                return;
+            }
+            
+            state.allVideos.forEach((video, idx) => {
+                content.appendChild(createVideoElement(video, idx));
+            });
+            
+            const loadMoreDiv = document.createElement('div');
+            loadMoreDiv.className = 'load-more-container';
+            loadMoreDiv.innerHTML = `
+                <button class="btn-load-more" id="loadMoreBtn" onclick="loadMore()">
+                    Tải thêm video
+                </button>
+            `;
+            content.appendChild(loadMoreDiv);
+            
+            setupObserver();
+        }
+
+        function createVideoElement(video, idx) {
+            const div = document.createElement('div');
+            div.className = 'video-item';
+            
+            const avatar = video.author?.avatar || '';
+            const name = escapeHtml(video.author?.nickname || 'Unknown');
+            const username = escapeHtml(video.author?.username || 'unknown');
+            const caption = escapeHtml(video.caption || '');
+            
+            div.innerHTML = `
+                <div class="video-header">
+                    <img src="${avatar}" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22%3E%3Crect fill=%22%23222%22 width=%2244%22 height=%2244%22/%3E%3C/svg%3E'">
+                    <div class="author-info">
+                        <div class="author-name">${name}</div>
+                        <div class="author-username">@${username}</div>
+                    </div>
+                </div>
+                <div class="video-wrapper" id="wrapper-${idx}" data-idx="${idx}">
+                    <img src="${video.cover}" class="video-cover" onclick="playVideo(${idx})" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect fill=%22%23000%22 width=%22400%22 height=%22400%22/%3E%3C/svg%3E'">
+                    <div class="play-overlay" onclick="playVideo(${idx})">
+                        <div class="play-btn">▶</div>
+                    </div>
+                </div>
+                <div class="caption">${caption || '<i style="color:#666">Không có mô tả</i>'}</div>
+                <div class="stats">
+                    <span>❤️ ${formatNum(video.stats?.likes || 0)}</span>
+                    <span>💬 ${formatNum(video.stats?.comments || 0)}</span>
+                    <span>🔗 ${formatNum(video.stats?.shares || 0)}</span>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        function playVideo(idx) {
+            const video = state.allVideos[idx];
+            if (!video?.video_url) {
+                showToast('Không thể phát video');
+                return;
+            }
+            
+            const wrapper = document.getElementById(`wrapper-${idx}`);
+            
+            if (!wrapper) return;
+            
+            pauseAllVideos();
+            
+            wrapper.innerHTML = `
+                <video controls autoplay playsinline preload="metadata">
+                    <source src="${video.video_url}" type="video/mp4">
+                    Trình duyệt không hỗ trợ video
+                </video>
+            `;
+            
+            setTimeout(() => {
+                wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        function pauseAllVideos() {
+            document.querySelectorAll('video').forEach(v => v.pause());
+        }
+
+        function setupObserver() {
+            cleanupObserver();
+            
+            state.observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (!video) return;
+                    
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                        video.play().catch(() => {});
+                    } else {
+                        video.pause();
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            document.querySelectorAll('.video-wrapper').forEach(w => {
+                state.observer.observe(w);
+            });
+        }
+
+        function cleanupObserver() {
+            if (state.observer) {
+                state.observer.disconnect();
+                state.observer = null;
+            }
+        }
+
+        function showLoading(msg) {
+            content.innerHTML = `<div class="loading"><div class="spinner"></div><div>${msg}</div></div>`;
+            cleanupObserver();
+        }
+
+        function showError(msg) {
+            content.innerHTML = `<div class="error">❌<br><br>${msg}</div>`;
+            cleanupObserver();
+        }
+
+        function showEmpty(msg = '🔍<br><br>Nhập từ khóa để tìm kiếm') {
+            content.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">${msg}</div></div>`;
+            cleanupObserver();
+        }
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function formatNum(n) {
+            if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            return n;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        window.addEventListener('beforeunload', cleanupObserver);
+    </script>
+</body>
+</html>
