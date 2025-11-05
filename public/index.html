@@ -27,11 +27,11 @@
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(180deg, #000 0%, rgba(0,0,0,0.95) 100%);
+            background: #000;
+            background: -webkit-linear-gradient(top, #000 0%, rgba(0,0,0,0.95) 100%);
             padding: 8px 10px;
             z-index: 1000;
             border-bottom: 1px solid #222;
-            backdrop-filter: blur(10px);
         }
 
         .logo {
@@ -39,7 +39,7 @@
             font-size: 20px;
             font-weight: 800;
             margin-bottom: 8px;
-            background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+            background: -webkit-linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -67,7 +67,7 @@
 
         .btn-search {
             padding: 10px 18px;
-            background: linear-gradient(135deg, #ff0050 0%, #d90040 100%);
+            background: #ff0050;
             border: none;
             border-radius: 8px;
             color: #fff;
@@ -97,7 +97,7 @@
         }
 
         .tab.active {
-            background: linear-gradient(135deg, #ff0050 0%, #d90040 100%);
+            background: #ff0050;
             color: #fff;
         }
 
@@ -224,11 +224,16 @@
             border-top-color: #ff0050;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            -webkit-animation: spin 0.8s linear infinite;
             margin-bottom: 16px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        @-webkit-keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
         }
 
         .load-more-container {
@@ -238,18 +243,13 @@
 
         .btn-load-more {
             padding: 12px 32px;
-            background: linear-gradient(135deg, #ff0050 0%, #d90040 100%);
+            background: #ff0050;
             border: none;
             border-radius: 8px;
             color: #fff;
             font-weight: 700;
             cursor: pointer;
             font-size: 14px;
-            box-shadow: 0 2px 8px rgba(255, 0, 80, 0.3);
-        }
-
-        .btn-load-more:active {
-            transform: scale(0.95);
         }
 
         .info-text {
@@ -286,6 +286,7 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
+            -webkit-transform: translateX(-50%) translateY(100px);
             background: rgba(0, 0, 0, 0.9);
             color: #fff;
             padding: 12px 20px;
@@ -294,10 +295,12 @@
             z-index: 2000;
             border: 1px solid #333;
             transition: transform 0.3s;
+            -webkit-transition: -webkit-transform 0.3s;
         }
 
         .toast.show {
             transform: translateX(-50%) translateY(0);
+            -webkit-transform: translateX(-50%) translateY(0);
         }
     </style>
 </head>
@@ -324,54 +327,64 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const CONFIG = {
-            // API_URL: 'http://localhost:3000/api',
-            API_URL: 'https://b6-tok.vercel.app/api',
+        // ES5 Compatible Code for BlackBerry OS 10
+        
+        var CONFIG = {
+            API_URL: 'https://b6-tok.vercel.app/api'
         };
 
-        let state = {
+        var state = {
             currentTab: 'search',
             currentQuery: '',
             allVideos: [],
             isLoading: false,
             observer: null,
-            currentCursor: 0,
+            loadMoreAttempts: 0,
+            maxLoadMoreAttempts: 2
         };
 
-        const searchInput = document.getElementById('searchInput');
-        const btnSearch = document.getElementById('btnSearch');
-        const tabSearch = document.getElementById('tabSearch');
-        const tabTrending = document.getElementById('tabTrending');
-        const content = document.getElementById('content');
-        const toast = document.getElementById('toast');
+        var searchInput = document.getElementById('searchInput');
+        var btnSearch = document.getElementById('btnSearch');
+        var tabSearch = document.getElementById('tabSearch');
+        var tabTrending = document.getElementById('tabTrending');
+        var content = document.getElementById('content');
+        var toast = document.getElementById('toast');
 
+        // Event Listeners
         btnSearch.addEventListener('click', handleSearch);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSearch();
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                handleSearch();
+            }
         });
-        tabSearch.addEventListener('click', () => switchTab('search'));
-        tabTrending.addEventListener('click', () => switchTab('trending'));
+        tabSearch.addEventListener('click', function() {
+            switchTab('search');
+        });
+        tabTrending.addEventListener('click', function() {
+            switchTab('trending');
+        });
 
         function switchTab(tab) {
             if (state.isLoading) return;
             
             state.currentTab = tab;
             state.allVideos = [];
-            state.currentCursor = 0;
+            state.loadMoreAttempts = 0;
             state.currentQuery = '';
             
-            tabSearch.classList.toggle('active', tab === 'search');
-            tabTrending.classList.toggle('active', tab === 'trending');
-            
-            if (tab === 'trending') {
-                loadTrending();
-            } else {
+            if (tab === 'search') {
+                tabSearch.className = 'tab active';
+                tabTrending.className = 'tab';
                 showEmpty();
+            } else {
+                tabSearch.className = 'tab';
+                tabTrending.className = 'tab active';
+                loadTrending();
             }
         }
 
-        async function handleSearch() {
-            const query = searchInput.value.trim();
+        function handleSearch() {
+            var query = searchInput.value.trim();
             
             if (!query) {
                 showToast('⚠️ Nhập từ khóa tìm kiếm');
@@ -379,35 +392,49 @@
             }
             
             state.allVideos = [];
-            state.currentCursor = 0;
+            state.loadMoreAttempts = 0;
             state.currentQuery = query;
             
-            await fetchVideos(`${CONFIG.API_URL}/search?q=${encodeURIComponent(query)}`, true);
+            fetchVideos(CONFIG.API_URL + '/search?q=' + encodeURIComponent(query), true);
         }
 
-        async function loadTrending() {
+        function loadTrending() {
             state.allVideos = [];
-            state.currentCursor = 0;
+            state.loadMoreAttempts = 0;
             state.currentQuery = '';
-            await fetchVideos(`${CONFIG.API_URL}/trending`, true);
+            fetchVideos(CONFIG.API_URL + '/trending', true);
         }
 
-        async function loadMore() {
+        function loadMore() {
+            if (state.loadMoreAttempts >= state.maxLoadMoreAttempts) {
+                showToast('📭 Đã hết video');
+                removeLoadMoreButton();
+                return;
+            }
+            
+            state.loadMoreAttempts++;
+            
+            var timestamp = new Date().getTime();
+            var url;
+            
             if (state.currentTab === 'trending') {
-                await fetchVideos(`${CONFIG.API_URL}/trending`, false);
+                url = CONFIG.API_URL + '/trending?_t=' + timestamp;
             } else if (state.currentQuery) {
-                await fetchVideos(`${CONFIG.API_URL}/search?q=${encodeURIComponent(state.currentQuery)}`, false);
+                url = CONFIG.API_URL + '/search?q=' + encodeURIComponent(state.currentQuery) + '&_t=' + timestamp;
+            }
+            
+            if (url) {
+                fetchVideos(url, false);
             }
         }
 
-        async function fetchVideos(url, isNewSearch = true) {
+        function fetchVideos(url, isNewSearch) {
             if (state.isLoading) return;
             
             if (isNewSearch) {
                 showLoading('Đang tải...');
             } else {
-                const loadMoreBtn = document.getElementById('loadMoreBtn');
-
+                var loadMoreBtn = document.getElementById('loadMoreBtn');
                 if (loadMoreBtn) {
                     loadMoreBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto;"></div>';
                     loadMoreBtn.disabled = true;
@@ -416,55 +443,93 @@
             
             state.isLoading = true;
             
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if (!res.ok || data.error) throw new Error(data.error || 'Lỗi tải dữ liệu');
-                
-                if (!data.videos || data.videos.length === 0) {
-                    if (isNewSearch) {
-                        showEmpty('Không có video');
-                    } else {
-                        showToast('Không có thêm video mới');
-                    }
-
-                    return;
-                }
-                
-                const existingIds = new Set(state.allVideos.map(v => v.id));
-                const newVideos = data.videos.filter(v => !existingIds.has(v.id));
-                
-                if (newVideos.length === 0 && !isNewSearch) {
-                    showToast('Không có thêm video mới (trùng lặp)');
-                    renderVideos();
-
-                    return;
-                }
-                
-                state.allVideos = [...state.allVideos, ...newVideos];
-                state.currentCursor += newVideos.length;
-                
-                renderVideos();
-                
-                if (isNewSearch) {
-                    showToast(`${data.videos.length} video`);
-                    window.scrollTo(0, 0);
-                } else {
-                    showToast(`Thêm ${newVideos.length} video mới`);
-                }
-                
-            } catch (err) {
-                console.error('Fetch error:', err);
-                if (isNewSearch) {
-                    showError(err.message);
-                } else {
-                    showToast(err.message);
-                    renderVideos();
-                }
-            } finally {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            
+            xhr.onload = function() {
                 state.isLoading = false;
-            }
+                
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        
+                        if (!data.videos || data.videos.length === 0) {
+                            if (isNewSearch) {
+                                showEmpty('📭 Không có video');
+                            } else {
+                                showToast('📭 Không có thêm video');
+                                removeLoadMoreButton();
+                            }
+                            return;
+                        }
+                        
+                        // Filter duplicates
+                        var existingIds = {};
+                        for (var i = 0; i < state.allVideos.length; i++) {
+                            existingIds[state.allVideos[i].id] = true;
+                        }
+                        
+                        var newVideos = [];
+                        for (var j = 0; j < data.videos.length; j++) {
+                            if (!existingIds[data.videos[j].id]) {
+                                newVideos.push(data.videos[j]);
+                            }
+                        }
+                        
+                        if (newVideos.length === 0 && !isNewSearch) {
+                            if (state.loadMoreAttempts >= state.maxLoadMoreAttempts) {
+                                showToast('📭 Đã hết video');
+                                removeLoadMoreButton();
+                            } else {
+                                showToast('⚠️ Video trùng. Thử lại (' + (state.maxLoadMoreAttempts - state.loadMoreAttempts) + ' lần)');
+                                renderVideos();
+                            }
+                            return;
+                        }
+                        
+                        state.allVideos = state.allVideos.concat(newVideos);
+                        renderVideos();
+                        
+                        if (isNewSearch) {
+                            showToast('✅ ' + data.videos.length + ' video');
+                            window.scrollTo(0, 0);
+                        } else {
+                            showToast('✅ Thêm ' + newVideos.length + ' video');
+                        }
+                        
+                    } catch (e) {
+                        if (isNewSearch) {
+                            showError('Lỗi: ' + e.message);
+                        } else {
+                            showToast('❌ ' + e.message);
+                            renderVideos();
+                        }
+                    }
+                } else {
+                    if (isNewSearch) {
+                        showError('Lỗi kết nối (HTTP ' + xhr.status + ')');
+                    } else {
+                        showToast('❌ Lỗi kết nối');
+                        renderVideos();
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                state.isLoading = false;
+                if (isNewSearch) {
+                    showError('Không thể kết nối');
+                } else {
+                    showToast('❌ Không thể kết nối');
+                    renderVideos();
+                }
+            };
+            
+            xhr.send();
         }
 
         function renderVideos() {
@@ -473,108 +538,95 @@
             
             if (state.allVideos.length === 0) {
                 showEmpty();
-
                 return;
             }
             
-            state.allVideos.forEach((video, idx) => {
-                content.appendChild(createVideoElement(video, idx));
-            });
+            for (var i = 0; i < state.allVideos.length; i++) {
+                content.appendChild(createVideoElement(state.allVideos[i], i));
+            }
             
-            const loadMoreDiv = document.createElement('div');
-            loadMoreDiv.className = 'load-more-container';
-            loadMoreDiv.innerHTML = `
-                <button class="btn-load-more" id="loadMoreBtn" onclick="loadMore()">
-                    Tải thêm video
-                </button>
-            `;
-            content.appendChild(loadMoreDiv);
+            if (state.loadMoreAttempts < state.maxLoadMoreAttempts) {
+                var loadMoreDiv = document.createElement('div');
+                loadMoreDiv.className = 'load-more-container';
+                loadMoreDiv.id = 'load-more-container';
+                loadMoreDiv.innerHTML = '<button class="btn-load-more" id="loadMoreBtn" onclick="loadMore()">🔄 Tải thêm (' + (state.maxLoadMoreAttempts - state.loadMoreAttempts) + ' lần)</button><div class="info-text">API có thể trả video trùng</div>';
+                content.appendChild(loadMoreDiv);
+            } else {
+                var endDiv = document.createElement('div');
+                endDiv.className = 'load-more-container';
+                endDiv.innerHTML = '<div class="info-text" style="color: #999;">🎬 Đã hết video</div>';
+                content.appendChild(endDiv);
+            }
             
             setupObserver();
         }
 
         function createVideoElement(video, idx) {
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.className = 'video-item';
             
-            const avatar = video.author?.avatar || '';
-            const name = escapeHtml(video.author?.nickname || 'Unknown');
-            const username = escapeHtml(video.author?.username || 'unknown');
-            const caption = escapeHtml(video.caption || '');
+            var avatar = (video.author && video.author.avatar) ? video.author.avatar : '';
+            var name = escapeHtml((video.author && video.author.nickname) ? video.author.nickname : 'Unknown');
+            var username = escapeHtml((video.author && video.author.username) ? video.author.username : 'unknown');
+            var caption = escapeHtml(video.caption || '');
+            var likes = formatNum((video.stats && video.stats.likes) ? video.stats.likes : 0);
+            var comments = formatNum((video.stats && video.stats.comments) ? video.stats.comments : 0);
+            var shares = formatNum((video.stats && video.stats.shares) ? video.stats.shares : 0);
             
-            div.innerHTML = `
-                <div class="video-header">
-                    <img src="${avatar}" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22%3E%3Crect fill=%22%23222%22 width=%2244%22 height=%2244%22/%3E%3C/svg%3E'">
-                    <div class="author-info">
-                        <div class="author-name">${name}</div>
-                        <div class="author-username">@${username}</div>
-                    </div>
-                </div>
-                <div class="video-wrapper" id="wrapper-${idx}" data-idx="${idx}">
-                    <img src="${video.cover}" class="video-cover" onclick="playVideo(${idx})" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect fill=%22%23000%22 width=%22400%22 height=%22400%22/%3E%3C/svg%3E'">
-                    <div class="play-overlay" onclick="playVideo(${idx})">
-                        <div class="play-btn">▶</div>
-                    </div>
-                </div>
-                <div class="caption">${caption || '<i style="color:#666">Không có mô tả</i>'}</div>
-                <div class="stats">
-                    <span>❤️ ${formatNum(video.stats?.likes || 0)}</span>
-                    <span>💬 ${formatNum(video.stats?.comments || 0)}</span>
-                    <span>🔗 ${formatNum(video.stats?.shares || 0)}</span>
-                </div>
-            `;
+            div.innerHTML = '<div class="video-header"><img src="' + avatar + '" class="avatar" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22%3E%3Crect fill=%22%23222%22 width=%2244%22 height=%2244%22/%3E%3C/svg%3E\'"><div class="author-info"><div class="author-name">' + name + '</div><div class="author-username">@' + username + '</div></div></div><div class="video-wrapper" id="wrapper-' + idx + '" data-idx="' + idx + '"><img src="' + video.cover + '" class="video-cover" onclick="playVideo(' + idx + ')"><div class="play-overlay" onclick="playVideo(' + idx + ')"><div class="play-btn">▶</div></div></div><div class="caption">' + (caption || '<i style="color:#666">Không có mô tả</i>') + '</div><div class="stats"><span>❤️ ' + likes + '</span><span>💬 ' + comments + '</span><span>🔗 ' + shares + '</span></div>';
             
             return div;
         }
 
         function playVideo(idx) {
-            const video = state.allVideos[idx];
-            if (!video?.video_url) {
-                showToast('Không thể phát video');
+            var video = state.allVideos[idx];
+            if (!video || !video.video_url) {
+                showToast('❌ Không thể phát video');
                 return;
             }
             
-            const wrapper = document.getElementById(`wrapper-${idx}`);
-            
+            var wrapper = document.getElementById('wrapper-' + idx);
             if (!wrapper) return;
             
             pauseAllVideos();
             
-            wrapper.innerHTML = `
-                <video controls autoplay playsinline preload="metadata">
-                    <source src="${video.video_url}" type="video/mp4">
-                    Trình duyệt không hỗ trợ video
-                </video>
-            `;
+            wrapper.innerHTML = '<video controls autoplay playsinline preload="metadata"><source src="' + video.video_url + '" type="video/mp4">Không hỗ trợ video</video>';
             
-            setTimeout(() => {
+            setTimeout(function() {
                 wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);
         }
 
         function pauseAllVideos() {
-            document.querySelectorAll('video').forEach(v => v.pause());
+            var videos = document.querySelectorAll('video');
+            for (var i = 0; i < videos.length; i++) {
+                videos[i].pause();
+            }
         }
 
         function setupObserver() {
             cleanupObserver();
             
-            state.observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const video = entry.target.querySelector('video');
-                    if (!video) return;
+            if (!window.IntersectionObserver) return;
+            
+            state.observer = new IntersectionObserver(function(entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    var entry = entries[i];
+                    var video = entry.target.querySelector('video');
+                    if (!video) continue;
                     
                     if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-                        video.play().catch(() => {});
+                        video.play().catch(function() {});
                     } else {
                         video.pause();
                     }
-                });
+                }
             }, { threshold: 0.5 });
             
-            document.querySelectorAll('.video-wrapper').forEach(w => {
-                state.observer.observe(w);
-            });
+            var wrappers = document.querySelectorAll('.video-wrapper');
+            for (var j = 0; j < wrappers.length; j++) {
+                state.observer.observe(wrappers[j]);
+            }
         }
 
         function cleanupObserver() {
@@ -584,35 +636,45 @@
             }
         }
 
+        function removeLoadMoreButton() {
+            var container = document.getElementById('load-more-container');
+            if (container) {
+                container.innerHTML = '<div class="info-text" style="color: #999;">🎬 Đã hết video</div>';
+            }
+        }
+
         function showLoading(msg) {
-            content.innerHTML = `<div class="loading"><div class="spinner"></div><div>${msg}</div></div>`;
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><div>' + msg + '</div></div>';
             cleanupObserver();
         }
 
         function showError(msg) {
-            content.innerHTML = `<div class="error">❌<br><br>${msg}</div>`;
+            content.innerHTML = '<div class="error">❌<br><br>' + msg + '</div>';
             cleanupObserver();
         }
 
-        function showEmpty(msg = '🔍<br><br>Nhập từ khóa để tìm kiếm') {
-            content.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">${msg}</div></div>`;
+        function showEmpty(msg) {
+            var defaultMsg = '🔍<br><br>Nhập từ khóa để tìm kiếm';
+            content.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">' + (msg || defaultMsg) + '</div></div>';
             cleanupObserver();
         }
 
         function showToast(msg) {
             toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
+            toast.className = 'toast show';
+            setTimeout(function() {
+                toast.className = 'toast';
+            }, 2500);
         }
 
         function formatNum(n) {
-            if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-            if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-            return n;
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return n.toString();
         }
 
         function escapeHtml(text) {
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
