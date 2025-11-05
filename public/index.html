@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <title>TikTok BB</title>
     <style>
         * {
@@ -15,11 +14,12 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: Arial, sans-serif;
             background: #000;
             color: #fff;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
         }
 
         .header {
@@ -28,36 +28,42 @@
             left: 0;
             right: 0;
             background: #000;
-            background: -webkit-linear-gradient(top, #000 0%, rgba(0,0,0,0.95) 100%);
             padding: 8px 10px;
-            z-index: 1000;
+            z-index: 100;
             border-bottom: 1px solid #222;
+            -webkit-transition: -webkit-transform 0.3s ease;
+            transition: transform 0.3s ease;
+        }
+        
+        .header.hidden {
+            -webkit-transform: translateY(-100%);
+            transform: translateY(-100%);
         }
 
         .logo {
             text-align: center;
-            font-size: 20px;
-            font-weight: 800;
+            font-size: 18px;
+            font-weight: bold;
             margin-bottom: 8px;
-            background: -webkit-linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ff0050;
         }
 
         .search-box {
+            display: -webkit-box;
             display: flex;
-            gap: 6px;
             margin-bottom: 8px;
         }
 
         .search-box input {
+            -webkit-box-flex: 1;
             flex: 1;
-            padding: 10px 14px;
+            padding: 10px;
             background: #1a1a1a;
             border: 1px solid #333;
-            border-radius: 8px;
+            border-radius: 4px;
             color: #fff;
             font-size: 14px;
+            margin-right: 6px;
         }
 
         .search-box input:focus {
@@ -66,34 +72,33 @@
         }
 
         .btn-search {
-            padding: 10px 18px;
+            padding: 10px 16px;
             background: #ff0050;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             color: #fff;
-            font-weight: 700;
-            cursor: pointer;
+            font-weight: bold;
             font-size: 14px;
         }
 
         .tabs {
+            display: -webkit-box;
             display: flex;
-            gap: 8px;
             background: #111;
-            padding: 4px;
-            border-radius: 8px;
+            padding: 3px;
+            border-radius: 4px;
         }
 
         .tab {
+            -webkit-box-flex: 1;
             flex: 1;
-            padding: 8px 12px;
+            padding: 8px;
             background: transparent;
             border: none;
-            border-radius: 6px;
+            border-radius: 3px;
             color: #666;
             font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+            font-weight: bold;
         }
 
         .tab.active {
@@ -102,43 +107,43 @@
         }
 
         .content {
-            margin-top: 145px;
+            margin-top: 130px;
             padding: 0 8px 20px 8px;
-            min-height: calc(100vh - 145px);
         }
 
         .video-item {
             background: #111;
-            margin-bottom: 12px;
-            border-radius: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
             overflow: hidden;
             border: 1px solid #222;
         }
 
         .video-header {
+            display: -webkit-box;
             display: flex;
+            -webkit-box-align: center;
             align-items: center;
-            padding: 10px 12px;
-            gap: 10px;
-            background: #1a1a1a;
+            padding: 10px;
         }
 
         .avatar {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: #222;
             border: 2px solid #ff0050;
-            object-fit: cover;
+            margin-right: 10px;
         }
 
         .author-info {
+            -webkit-box-flex: 1;
             flex: 1;
             min-width: 0;
         }
 
         .author-name {
-            font-weight: 700;
+            font-weight: bold;
             font-size: 14px;
             white-space: nowrap;
             overflow: hidden;
@@ -152,16 +157,13 @@
 
         .video-wrapper {
             position: relative;
-            width: 100%;
             background: #000;
-            min-height: 200px;
         }
 
         .video-cover {
             width: 100%;
             height: auto;
             display: block;
-            cursor: pointer;
         }
 
         .play-overlay {
@@ -170,22 +172,27 @@
             left: 0;
             right: 0;
             bottom: 0;
+            display: -webkit-box;
             display: flex;
+            -webkit-box-align: center;
             align-items: center;
+            -webkit-box-pack: center;
             justify-content: center;
             background: rgba(0,0,0,0.3);
-            cursor: pointer;
         }
 
         .play-btn {
-            width: 64px;
-            height: 64px;
-            background: rgba(255, 255, 255, 0.95);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 50%;
+            display: -webkit-box;
             display: flex;
+            -webkit-box-align: center;
             align-items: center;
+            -webkit-box-pack: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 24px;
         }
 
         video {
@@ -196,65 +203,70 @@
         }
 
         .caption {
-            padding: 12px;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #e0e0e0;
+            padding: 10px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #ddd;
+            word-wrap: break-word;
         }
 
         .stats {
+            display: -webkit-box;
             display: flex;
-            gap: 16px;
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-top: 1px solid #222;
-            font-size: 13px;
+            font-size: 12px;
             color: #999;
+        }
+
+        .stats span {
+            margin-right: 15px;
         }
 
         .loading {
             text-align: center;
             padding: 60px 20px;
+            color: #999;
         }
 
         .spinner {
             display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #222;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #222;
             border-top-color: #ff0050;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            -webkit-animation: spin 0.8s linear infinite;
-            margin-bottom: 16px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
 
         @-webkit-keyframes spin {
             to { -webkit-transform: rotate(360deg); }
         }
 
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .load-more-container {
             text-align: center;
-            padding: 20px;
+            padding: 15px;
         }
 
         .btn-load-more {
-            padding: 12px 32px;
+            padding: 10px 25px;
             background: #ff0050;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             color: #fff;
-            font-weight: 700;
-            cursor: pointer;
+            font-weight: bold;
             font-size: 14px;
         }
 
         .info-text {
             color: #666;
-            font-size: 12px;
+            font-size: 11px;
             margin-top: 8px;
         }
 
@@ -267,40 +279,41 @@
         .empty {
             text-align: center;
             padding: 80px 20px;
-        }
-
-        .empty-icon {
-            font-size: 72px;
-            margin-bottom: 20px;
-            opacity: 0.6;
-        }
-
-        .empty-text {
             color: #666;
-            font-size: 15px;
-            line-height: 1.6;
         }
 
         .toast {
             position: fixed;
             bottom: 20px;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
             -webkit-transform: translateX(-50%) translateY(100px);
+            transform: translateX(-50%) translateY(100px);
             background: rgba(0, 0, 0, 0.9);
             color: #fff;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 2000;
+            padding: 10px 18px;
+            border-radius: 4px;
+            font-size: 13px;
+            z-index: 200;
             border: 1px solid #333;
-            transition: transform 0.3s;
+            max-width: 80%;
             -webkit-transition: -webkit-transform 0.3s;
+            transition: transform 0.3s;
         }
 
         .toast.show {
-            transform: translateX(-50%) translateY(0);
             -webkit-transform: translateX(-50%) translateY(0);
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Performance optimizations */
+        .video-item,
+        .video-wrapper,
+        img,
+        video {
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
     </style>
 </head>
@@ -308,7 +321,7 @@
     <div class="header">
         <div class="logo">🎬 B6Tok</div>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Tìm kiếm..." autocomplete="off">
+            <input type="text" id="searchInput" placeholder="Tìm kiếm...">
             <button class="btn-search" id="btnSearch">Tìm</button>
         </div>
         <div class="tabs">
@@ -318,19 +331,15 @@
     </div>
 
     <div class="content" id="content">
-        <div class="empty">
-            <div class="empty-icon">🔍</div>
-            <div class="empty-text">Nhập từ khóa để tìm kiếm video TikTok<br>hoặc xem tab Trending</div>
-        </div>
+        <div class="empty">🔍<br><br>Nhập từ khóa để tìm kiếm</div>
     </div>
 
     <div class="toast" id="toast"></div>
 
     <script>
-        // ES5 Compatible Code for BlackBerry OS 10
-        
         var CONFIG = {
-            API_URL: 'https://b6-tok.vercel.app/api'
+            API_URL: 'https://b6-tok.vercel.app/api',
+            MAX_VIDEOS_RENDER: 20 // Giới hạn render để tránh lag
         };
 
         var state = {
@@ -340,7 +349,9 @@
             isLoading: false,
             observer: null,
             loadMoreAttempts: 0,
-            maxLoadMoreAttempts: 2
+            maxLoadMoreAttempts: 2,
+            lastScrollTop: 0,
+            hasResults: false
         };
 
         var searchInput = document.getElementById('searchInput');
@@ -349,19 +360,24 @@
         var tabTrending = document.getElementById('tabTrending');
         var content = document.getElementById('content');
         var toast = document.getElementById('toast');
+        var header = document.querySelector('.header');
 
-        // Event Listeners
         btnSearch.addEventListener('click', handleSearch);
         searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' || e.keyCode === 13) {
-                handleSearch();
-            }
+            if (e.keyCode === 13) handleSearch();
         });
         tabSearch.addEventListener('click', function() {
             switchTab('search');
         });
         tabTrending.addEventListener('click', function() {
             switchTab('trending');
+        });
+        
+        // Scroll event for auto-hide header
+        var scrollTimeout;
+        window.addEventListener('scroll', function() {
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(handleScroll, 50);
         });
 
         function switchTab(tab) {
@@ -371,73 +387,68 @@
             state.allVideos = [];
             state.loadMoreAttempts = 0;
             state.currentQuery = '';
+            state.hasResults = false;
             
-            if (tab === 'search') {
-                tabSearch.className = 'tab active';
-                tabTrending.className = 'tab';
-                showEmpty();
-            } else {
-                tabSearch.className = 'tab';
-                tabTrending.className = 'tab active';
+            // Show header when switching tabs
+            header.className = 'header';
+            
+            tabSearch.className = tab === 'search' ? 'tab active' : 'tab';
+            tabTrending.className = tab === 'trending' ? 'tab active' : 'tab';
+            
+            if (tab === 'trending') {
                 loadTrending();
+            } else {
+                showEmpty();
             }
         }
 
         function handleSearch() {
             var query = searchInput.value.trim();
-            
             if (!query) {
-                showToast('⚠️ Nhập từ khóa tìm kiếm');
+                showToast('⚠️ Nhập từ khóa');
                 return;
             }
             
             state.allVideos = [];
             state.loadMoreAttempts = 0;
             state.currentQuery = query;
-            
+            state.hasResults = false;
             fetchVideos(CONFIG.API_URL + '/search?q=' + encodeURIComponent(query), true);
         }
 
         function loadTrending() {
             state.allVideos = [];
             state.loadMoreAttempts = 0;
-            state.currentQuery = '';
+            state.hasResults = false;
             fetchVideos(CONFIG.API_URL + '/trending', true);
         }
 
         function loadMore() {
             if (state.loadMoreAttempts >= state.maxLoadMoreAttempts) {
-                showToast('📭 Đã hết video');
+                showToast('📭 Đã hết');
                 removeLoadMoreButton();
                 return;
             }
             
             state.loadMoreAttempts++;
+            var ts = new Date().getTime();
+            var url = state.currentTab === 'trending' 
+                ? CONFIG.API_URL + '/trending?_t=' + ts
+                : CONFIG.API_URL + '/search?q=' + encodeURIComponent(state.currentQuery) + '&_t=' + ts;
             
-            var timestamp = new Date().getTime();
-            var url;
-            
-            if (state.currentTab === 'trending') {
-                url = CONFIG.API_URL + '/trending?_t=' + timestamp;
-            } else if (state.currentQuery) {
-                url = CONFIG.API_URL + '/search?q=' + encodeURIComponent(state.currentQuery) + '&_t=' + timestamp;
-            }
-            
-            if (url) {
-                fetchVideos(url, false);
-            }
+            fetchVideos(url, false);
         }
 
-        function fetchVideos(url, isNewSearch) {
+        function fetchVideos(url, isNew) {
             if (state.isLoading) return;
             
-            if (isNewSearch) {
+            if (isNew) {
                 showLoading('Đang tải...');
             } else {
-                var loadMoreBtn = document.getElementById('loadMoreBtn');
-                if (loadMoreBtn) {
-                    loadMoreBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto;"></div>';
-                    loadMoreBtn.disabled = true;
+                var btn = document.getElementById('loadMoreBtn');
+                if (btn) {
+                    btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; border-width: 2px; margin: 0 auto;"></div>';
+                    btn.disabled = true;
                 }
             }
             
@@ -445,6 +456,7 @@
             
             var xhr = new XMLHttpRequest();
             xhr.open('GET', url, true);
+            xhr.timeout = 15000; // 15s timeout
             
             xhr.onload = function() {
                 state.isLoading = false;
@@ -453,67 +465,66 @@
                     try {
                         var data = JSON.parse(xhr.responseText);
                         
-                        if (data.error) {
-                            throw new Error(data.error);
-                        }
-                        
-                        if (!data.videos || data.videos.length === 0) {
-                            if (isNewSearch) {
+                        if (data.error || !data.videos || data.videos.length === 0) {
+                            if (isNew) {
                                 showEmpty('📭 Không có video');
                             } else {
-                                showToast('📭 Không có thêm video');
+                                showToast('📭 Không có thêm');
                                 removeLoadMoreButton();
                             }
                             return;
                         }
                         
-                        // Filter duplicates
+                        // Filter duplicates (simple)
                         var existingIds = {};
                         for (var i = 0; i < state.allVideos.length; i++) {
                             existingIds[state.allVideos[i].id] = true;
                         }
                         
-                        var newVideos = [];
+                        var newVids = [];
                         for (var j = 0; j < data.videos.length; j++) {
                             if (!existingIds[data.videos[j].id]) {
-                                newVideos.push(data.videos[j]);
+                                newVids.push(data.videos[j]);
                             }
                         }
                         
-                        if (newVideos.length === 0 && !isNewSearch) {
-                            if (state.loadMoreAttempts >= state.maxLoadMoreAttempts) {
-                                showToast('📭 Đã hết video');
-                                removeLoadMoreButton();
-                            } else {
-                                showToast('⚠️ Video trùng. Thử lại (' + (state.maxLoadMoreAttempts - state.loadMoreAttempts) + ' lần)');
-                                renderVideos();
-                            }
+                        if (newVids.length === 0 && !isNew) {
+                            showToast('⚠️ Trùng lặp');
+                            renderVideos();
                             return;
                         }
                         
-                        state.allVideos = state.allVideos.concat(newVideos);
+                        state.allVideos = state.allVideos.concat(newVids);
+                        
+                        // Limit total videos to prevent lag
+                        if (state.allVideos.length > CONFIG.MAX_VIDEOS_RENDER) {
+                            state.allVideos = state.allVideos.slice(0, CONFIG.MAX_VIDEOS_RENDER);
+                        }
+                        
+                        state.hasResults = true;
                         renderVideos();
                         
-                        if (isNewSearch) {
+                        if (isNew) {
                             showToast('✅ ' + data.videos.length + ' video');
                             window.scrollTo(0, 0);
+                            state.lastScrollTop = 0;
                         } else {
-                            showToast('✅ Thêm ' + newVideos.length + ' video');
+                            showToast('✅ +' + newVids.length);
                         }
                         
                     } catch (e) {
-                        if (isNewSearch) {
+                        if (isNew) {
                             showError('Lỗi: ' + e.message);
                         } else {
-                            showToast('❌ ' + e.message);
+                            showToast('❌ Lỗi');
                             renderVideos();
                         }
                     }
                 } else {
-                    if (isNewSearch) {
-                        showError('Lỗi kết nối (HTTP ' + xhr.status + ')');
+                    if (isNew) {
+                        showError('Lỗi kết nối');
                     } else {
-                        showToast('❌ Lỗi kết nối');
+                        showToast('❌ Lỗi');
                         renderVideos();
                     }
                 }
@@ -521,10 +532,20 @@
             
             xhr.onerror = function() {
                 state.isLoading = false;
-                if (isNewSearch) {
-                    showError('Không thể kết nối');
+                if (isNew) {
+                    showError('Không kết nối được');
                 } else {
-                    showToast('❌ Không thể kết nối');
+                    showToast('❌ Không kết nối');
+                    renderVideos();
+                }
+            };
+            
+            xhr.ontimeout = function() {
+                state.isLoading = false;
+                if (isNew) {
+                    showError('Timeout');
+                } else {
+                    showToast('❌ Timeout');
                     renderVideos();
                 }
             };
@@ -541,21 +562,29 @@
                 return;
             }
             
+            // Use DocumentFragment for better performance
+            var fragment = document.createDocumentFragment();
+            
             for (var i = 0; i < state.allVideos.length; i++) {
-                content.appendChild(createVideoElement(state.allVideos[i], i));
+                fragment.appendChild(createVideoElement(state.allVideos[i], i));
             }
             
+            content.appendChild(fragment);
+            
+            // Add load more button
             if (state.loadMoreAttempts < state.maxLoadMoreAttempts) {
-                var loadMoreDiv = document.createElement('div');
-                loadMoreDiv.className = 'load-more-container';
-                loadMoreDiv.id = 'load-more-container';
-                loadMoreDiv.innerHTML = '<button class="btn-load-more" id="loadMoreBtn" onclick="loadMore()">🔄 Tải thêm (' + (state.maxLoadMoreAttempts - state.loadMoreAttempts) + ' lần)</button><div class="info-text">API có thể trả video trùng</div>';
-                content.appendChild(loadMoreDiv);
+                var loadMore = document.createElement('div');
+                loadMore.className = 'load-more-container';
+                loadMore.id = 'load-more-container';
+                loadMore.innerHTML = '<button class="btn-load-more" id="loadMoreBtn" onclick="loadMore()">🔄 Tải thêm</button>';
+                content.appendChild(loadMore);
             } else {
-                var endDiv = document.createElement('div');
-                endDiv.className = 'load-more-container';
-                endDiv.innerHTML = '<div class="info-text" style="color: #999;">🎬 Đã hết video</div>';
-                content.appendChild(endDiv);
+                var end = document.createElement('div');
+                end.className = 'info-text';
+                end.style.textAlign = 'center';
+                end.style.padding = '15px';
+                end.innerHTML = '🎬 Hết';
+                content.appendChild(end);
             }
             
             setupObserver();
@@ -569,36 +598,60 @@
             var name = escapeHtml((video.author && video.author.nickname) ? video.author.nickname : 'Unknown');
             var username = escapeHtml((video.author && video.author.username) ? video.author.username : 'unknown');
             var caption = escapeHtml(video.caption || '');
+            
             var likes = formatNum((video.stats && video.stats.likes) ? video.stats.likes : 0);
             var comments = formatNum((video.stats && video.stats.comments) ? video.stats.comments : 0);
             var shares = formatNum((video.stats && video.stats.shares) ? video.stats.shares : 0);
             
-            div.innerHTML = '<div class="video-header"><img src="' + avatar + '" class="avatar" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22%3E%3Crect fill=%22%23222%22 width=%2244%22 height=%2244%22/%3E%3C/svg%3E\'"><div class="author-info"><div class="author-name">' + name + '</div><div class="author-username">@' + username + '</div></div></div><div class="video-wrapper" id="wrapper-' + idx + '" data-idx="' + idx + '"><img src="' + video.cover + '" class="video-cover" onclick="playVideo(' + idx + ')"><div class="play-overlay" onclick="playVideo(' + idx + ')"><div class="play-btn">▶</div></div></div><div class="caption">' + (caption || '<i style="color:#666">Không có mô tả</i>') + '</div><div class="stats"><span>❤️ ' + likes + '</span><span>💬 ' + comments + '</span><span>🔗 ' + shares + '</span></div>';
+            // Simplified HTML structure for performance
+            var html = '<div class="video-header">';
+            html += '<img src="' + avatar + '" class="avatar" onerror="this.style.display=\'none\'">';
+            html += '<div class="author-info">';
+            html += '<div class="author-name">' + name + '</div>';
+            html += '<div class="author-username">@' + username + '</div>';
+            html += '</div></div>';
+            html += '<div class="video-wrapper" id="w' + idx + '" data-idx="' + idx + '">';
+            html += '<img src="' + video.cover + '" class="video-cover" onclick="playVideo(' + idx + ')">';
+            html += '<div class="play-overlay" onclick="playVideo(' + idx + ')">';
+            html += '<div class="play-btn">▶</div></div></div>';
             
+            if (caption) {
+                html += '<div class="caption">' + caption + '</div>';
+            }
+            
+            html += '<div class="stats">';
+            html += '<span>❤️ ' + likes + '</span>';
+            html += '<span>💬 ' + comments + '</span>';
+            html += '<span>🔗 ' + shares + '</span>';
+            html += '</div>';
+            
+            div.innerHTML = html;
             return div;
         }
 
         function playVideo(idx) {
             var video = state.allVideos[idx];
             if (!video || !video.video_url) {
-                showToast('❌ Không thể phát video');
+                showToast('❌ Lỗi video');
                 return;
             }
             
-            var wrapper = document.getElementById('wrapper-' + idx);
+            var wrapper = document.getElementById('w' + idx);
             if (!wrapper) return;
             
             pauseAllVideos();
             
-            wrapper.innerHTML = '<video controls autoplay playsinline preload="metadata"><source src="' + video.video_url + '" type="video/mp4">Không hỗ trợ video</video>';
+            wrapper.innerHTML = '<video controls autoplay playsinline preload="metadata"><source src="' + video.video_url + '" type="video/mp4"></video>';
             
             setTimeout(function() {
-                wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+                var rect = wrapper.getBoundingClientRect();
+                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                window.scrollTo(0, rect.top + scrollTop - 50);
+            }, 150);
         }
 
         function pauseAllVideos() {
-            var videos = document.querySelectorAll('video');
+            var videos = document.getElementsByTagName('video');
             for (var i = 0; i < videos.length; i++) {
                 videos[i].pause();
             }
@@ -607,26 +660,9 @@
         function setupObserver() {
             cleanupObserver();
             
-            if (!window.IntersectionObserver) return;
-            
-            state.observer = new IntersectionObserver(function(entries) {
-                for (var i = 0; i < entries.length; i++) {
-                    var entry = entries[i];
-                    var video = entry.target.querySelector('video');
-                    if (!video) continue;
-                    
-                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-                        video.play().catch(function() {});
-                    } else {
-                        video.pause();
-                    }
-                }
-            }, { threshold: 0.5 });
-            
-            var wrappers = document.querySelectorAll('.video-wrapper');
-            for (var j = 0; j < wrappers.length; j++) {
-                state.observer.observe(wrappers[j]);
-            }
+            // Skip IntersectionObserver on BB to save performance
+            // Auto-play/pause disabled for better performance
+            return;
         }
 
         function cleanupObserver() {
@@ -637,10 +673,8 @@
         }
 
         function removeLoadMoreButton() {
-            var container = document.getElementById('load-more-container');
-            if (container) {
-                container.innerHTML = '<div class="info-text" style="color: #999;">🎬 Đã hết video</div>';
-            }
+            var c = document.getElementById('load-more-container');
+            if (c) c.innerHTML = '<div class="info-text" style="text-align: center;">🎬 Hết</div>';
         }
 
         function showLoading(msg) {
@@ -654,9 +688,10 @@
         }
 
         function showEmpty(msg) {
-            var defaultMsg = '🔍<br><br>Nhập từ khóa để tìm kiếm';
-            content.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">' + (msg || defaultMsg) + '</div></div>';
+            content.innerHTML = '<div class="empty">' + (msg || '🔍<br><br>Nhập từ khóa') + '</div>';
             cleanupObserver();
+            state.hasResults = false;
+            header.className = 'header'; // Show header on empty
         }
 
         function showToast(msg) {
@@ -664,7 +699,26 @@
             toast.className = 'toast show';
             setTimeout(function() {
                 toast.className = 'toast';
-            }, 2500);
+            }, 2000);
+        }
+        
+        function handleScroll() {
+            if (!state.hasResults) return; // Don't hide if no results
+            
+            var currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Ignore small scroll movements
+            if (Math.abs(currentScrollTop - state.lastScrollTop) < 5) return;
+            
+            if (currentScrollTop > state.lastScrollTop && currentScrollTop > 50) {
+                // Scrolling down & past threshold -> hide header
+                header.className = 'header hidden';
+            } else if (currentScrollTop < state.lastScrollTop) {
+                // Scrolling up -> show header
+                header.className = 'header';
+            }
+            
+            state.lastScrollTop = currentScrollTop;
         }
 
         function formatNum(n) {
@@ -678,8 +732,6 @@
             div.textContent = text;
             return div.innerHTML;
         }
-
-        window.addEventListener('beforeunload', cleanupObserver);
     </script>
 </body>
 </html>
