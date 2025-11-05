@@ -1,0 +1,19 @@
+{
+  "name": "B6Tok",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "TikTok client for BlackBerry Passport",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon api/index.js",
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
