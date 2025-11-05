@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>TikTok BB</title>
     <style>
@@ -20,6 +20,8 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
+            /* GIẢM KÍCH THƯỚC FONT CƠ SỞ CHO MÀN HÌNH DPI CAO */
+            font-size: 13px; 
         }
 
         .header {
@@ -28,7 +30,8 @@
             left: 0;
             right: 0;
             background: #000;
-            padding: 8px 10px;
+            /* ĐÃ SỬA: Giảm padding */
+            padding: 6px 8px;
             z-index: 100;
             border-bottom: 1px solid #222;
             -webkit-transition: -webkit-transform 0.3s ease;
@@ -42,28 +45,31 @@
 
         .logo {
             text-align: center;
-            font-size: 18px;
+            /* ĐÃ SỬA: Giảm font */
+            font-size: 17px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #ff0050;
         }
 
         .search-box {
             display: -webkit-box;
             display: flex;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .search-box input {
             -webkit-box-flex: 1;
             flex: 1;
-            padding: 10px;
+            /* ĐÃ SỬA: Giảm padding */
+            padding: 8px;
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 4px;
             color: #fff;
-            font-size: 14px;
-            margin-right: 6px;
+            /* ĐÃ SỬA: Giảm font */
+            font-size: 13px;
+            margin-right: 5px;
         }
 
         .search-box input:focus {
@@ -72,32 +78,37 @@
         }
 
         .btn-search {
-            padding: 10px 16px;
+            /* ĐÃ SỬA: Giảm padding */
+            padding: 8px 14px;
             background: #ff0050;
             border: none;
             border-radius: 4px;
             color: #fff;
             font-weight: bold;
-            font-size: 14px;
+            /* ĐÃ SỬA: Giảm font */
+            font-size: 13px;
         }
 
         .tabs {
             display: -webkit-box;
             display: flex;
             background: #111;
-            padding: 3px;
+            /* ĐÃ SỬA: Giảm padding */
+            padding: 2px;
             border-radius: 4px;
         }
 
         .tab {
             -webkit-box-flex: 1;
             flex: 1;
-            padding: 8px;
+            /* ĐÃ SỬA: Giảm padding */
+            padding: 7px;
             background: transparent;
             border: none;
             border-radius: 3px;
             color: #666;
-            font-size: 13px;
+            /* ĐÃ SỬA: Giảm font */
+            font-size: 12px;
             font-weight: bold;
         }
 
@@ -107,14 +118,18 @@
         }
 
         .content {
-            margin-top: 130px;
-            padding: 0 8px 20px 8px;
+            /* ĐÃ SỬA: Giảm margin-top để khớp với header nhỏ hơn */
+            margin-top: 120px;
+            /* ĐÃ SỬA: Giảm padding ngang */
+            padding: 0 6px 15px 6px;
         }
 
         .video-item {
             background: #111;
-            margin-bottom: 10px;
-            border-radius: 8px;
+            /* ĐÃ SỬA: Giảm margin-bottom */
+            margin-bottom: 8px;
+            /* ĐÃ SỬA: Giảm bo góc */
+            border-radius: 6px;
             overflow: hidden;
             border: 1px solid #222;
         }
@@ -124,16 +139,18 @@
             display: flex;
             -webkit-box-align: center;
             align-items: center;
-            padding: 10px;
+            /* ĐÃ SỬA: Giảm padding */
+            padding: 8px;
         }
 
         .avatar {
-            width: 40px;
-            height: 40px;
+            /* ĐÃ SỬA: Giảm kích thước avatar */
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: #222;
             border: 2px solid #ff0050;
-            margin-right: 10px;
+            margin-right: 8px;
         }
 
         .author-info {
@@ -144,14 +161,16 @@
 
         .author-name {
             font-weight: bold;
-            font-size: 14px;
+            /* ĐÃ SỬA: Giảm font */
+            font-size: 13px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .author-username {
-            font-size: 12px;
+            /* ĐÃ SỬA: Giảm font */
+            font-size: 11px;
             color: #888;
         }
 
@@ -161,6 +180,7 @@
         }
 
         .video-cover {
+            /* QUAN TRỌNG: Đảm bảo không bị tràn */
             width: 100%;
             height: auto;
             display: block;
@@ -182,8 +202,9 @@
         }
 
         .play-btn {
-            width: 60px;
-            height: 60px;
+            /* ĐÃ SỬA: Giảm kích thước nút play */
+            width: 50px;
+            height: 50px;
             background: rgba(255, 255, 255, 0.9);
             border-radius: 50%;
             display: -webkit-box;
@@ -192,10 +213,11 @@
             align-items: center;
             -webkit-box-pack: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
         }
 
         video {
+            /* QUAN TRỌNG: Đảm bảo không bị tràn */
             width: 100%;
             height: auto;
             display: block;
@@ -203,8 +225,9 @@
         }
 
         .caption {
-            padding: 10px;
-            font-size: 13px;
+            /* ĐÃ SỬA: Giảm padding và font */
+            padding: 8px 10px;
+            font-size: 12px;
             line-height: 1.4;
             color: #ddd;
             word-wrap: break-word;
@@ -213,9 +236,10 @@
         .stats {
             display: -webkit-box;
             display: flex;
-            padding: 8px 10px;
+            /* ĐÃ SỬA: Giảm padding và font */
+            padding: 7px 10px;
             border-top: 1px solid #222;
-            font-size: 12px;
+            font-size: 11px;
             color: #999;
         }
 
@@ -305,7 +329,7 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Performance optimizations */
+        /* Performance optimizations (Giữ nguyên) */
         .video-item,
         .video-wrapper,
         img,
@@ -337,9 +361,10 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // Logic JS giữ nguyên
         var CONFIG = {
             API_URL: 'https://b6-tok.vercel.app/api',
-            MAX_VIDEOS_RENDER: 20 // Giới hạn render để tránh lag
+            MAX_VIDEOS_RENDER: 20
         };
 
         var state = {
@@ -389,7 +414,6 @@
             state.currentQuery = '';
             state.hasResults = false;
             
-            // Show header when switching tabs
             header.className = 'header';
             
             tabSearch.className = tab === 'search' ? 'tab active' : 'tab';
@@ -562,7 +586,6 @@
                 return;
             }
             
-            // Use DocumentFragment for better performance
             var fragment = document.createDocumentFragment();
             
             for (var i = 0; i < state.allVideos.length; i++) {
@@ -571,7 +594,6 @@
             
             content.appendChild(fragment);
             
-            // Add load more button
             if (state.loadMoreAttempts < state.maxLoadMoreAttempts) {
                 var loadMore = document.createElement('div');
                 loadMore.className = 'load-more-container';
@@ -603,14 +625,15 @@
             var comments = formatNum((video.stats && video.stats.comments) ? video.stats.comments : 0);
             var shares = formatNum((video.stats && video.stats.shares) ? video.stats.shares : 0);
             
-            // Simplified HTML structure for performance
             var html = '<div class="video-header">';
-            html += '<img src="' + avatar + '" class="avatar" onerror="this.style.display=\'none\'">';
+            // SỬA: Dùng video.thumb thay vì video.author.avatar (nếu bạn đã sửa backend để trả về thumb)
+            html += '<img src="' + avatar + '" class="avatar" onerror="this.style.display=\'none\'">'; 
             html += '<div class="author-info">';
             html += '<div class="author-name">' + name + '</div>';
             html += '<div class="author-username">@' + username + '</div>';
             html += '</div></div>';
             html += '<div class="video-wrapper" id="w' + idx + '" data-idx="' + idx + '">';
+            // SỬA: Dùng video.cover (đã là link proxy)
             html += '<img src="' + video.cover + '" class="video-cover" onclick="playVideo(' + idx + ')">';
             html += '<div class="play-overlay" onclick="playVideo(' + idx + ')">';
             html += '<div class="play-btn">▶</div></div></div>';
@@ -631,6 +654,7 @@
 
         function playVideo(idx) {
             var video = state.allVideos[idx];
+            // SỬA: Dùng video.video_url (đã là link proxy)
             if (!video || !video.video_url) {
                 showToast('❌ Lỗi video');
                 return;
@@ -659,9 +683,6 @@
 
         function setupObserver() {
             cleanupObserver();
-            
-            // Skip IntersectionObserver on BB to save performance
-            // Auto-play/pause disabled for better performance
             return;
         }
 
@@ -691,7 +712,7 @@
             content.innerHTML = '<div class="empty">' + (msg || '🔍<br><br>Nhập từ khóa') + '</div>';
             cleanupObserver();
             state.hasResults = false;
-            header.className = 'header'; // Show header on empty
+            header.className = 'header';
         }
 
         function showToast(msg) {
@@ -703,18 +724,15 @@
         }
         
         function handleScroll() {
-            if (!state.hasResults) return; // Don't hide if no results
+            if (!state.hasResults) return;
             
             var currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
             
-            // Ignore small scroll movements
             if (Math.abs(currentScrollTop - state.lastScrollTop) < 5) return;
             
             if (currentScrollTop > state.lastScrollTop && currentScrollTop > 50) {
-                // Scrolling down & past threshold -> hide header
                 header.className = 'header hidden';
             } else if (currentScrollTop < state.lastScrollTop) {
-                // Scrolling up -> show header
                 header.className = 'header';
             }
             
