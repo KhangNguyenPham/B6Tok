@@ -356,6 +356,12 @@
 
     <div class="content" id="content">
         <div class="empty">🔍<br><br>Nhập từ khóa để tìm kiếm</div>
+
+        <!-- Cây thư mục truyện -->
+        <div id="librarySection" style="margin-top:15px; padding:10px; background:#111; border:1px solid #222; border-radius:6px;">
+            <div style="font-weight:bold; margin-bottom:6px; font-size:14px;">📚 Thư viện truyện (PDF)</div>
+            <div id="libraryTree" style="font-size:12px;"></div>
+        </div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -369,7 +375,8 @@
     
     <script>
         var CONFIG = {
-            API_URL: 'https://b6-tok.vercel.app/api',
+            // Dùng đường dẫn tương đối để luôn trỏ đúng server hiện tại (local hoặc vercel)
+            API_URL: '/api',
             MAX_VIDEOS_RENDER: 20
         };
 
@@ -392,6 +399,7 @@
         var content = document.getElementById('content');
         var toast = document.getElementById('toast');
         var header = document.querySelector('.header');
+        var libraryTree = document.getElementById('libraryTree');
 
         btnSearch.addEventListener('click', handleSearch);
         searchInput.addEventListener('keypress', function(e) {
@@ -410,6 +418,9 @@
             if (scrollTimeout) clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(handleScroll, 50);
         });
+
+        // Load cây thư mục truyện lúc mở trang
+        loadLibrary();
 
         function switchTab(tab) {
             if (state.isLoading) return;
@@ -755,6 +766,59 @@
             var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // ====== Thư viện truyện (cây thư mục) ======
+        function loadLibrary() {
+            if (!libraryTree) return;
+            libraryTree.innerHTML = '⏳ Đang đọc thư mục truyện...';
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', CONFIG.API_URL + '/library', true);
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        renderLibraryTree(data.items || [], data.baseUrl || '/comics');
+                    } catch (e) {
+                        libraryTree.innerHTML = '❌ Không đọc được danh sách truyện';
+                    }
+                } else {
+                    libraryTree.innerHTML = '❌ Lỗi tải danh sách truyện';
+                }
+            };
+            xhr.onerror = function() {
+                libraryTree.innerHTML = '❌ Lỗi kết nối khi tải thư viện truyện';
+            };
+            xhr.send();
+        }
+
+        function renderLibraryTree(items, baseUrl) {
+            if (!items || items.length === 0) {
+                libraryTree.innerHTML = '📭 Chưa có truyện. Hãy copy file PDF vào thư mục <code>public/comics</code>.';
+                return;
+            }
+
+            function buildList(nodes) {
+                var html = '<ul style="list-style:none; padding-left:12px; margin:4px 0;">';
+                for (var i = 0; i < nodes.length; i++) {
+                    var n = nodes[i];
+                    if (n.type === 'dir') {
+                        html += '<li style="margin:2px 0;">📁 <span>' + escapeHtml(n.name) + '</span>';
+                        if (n.children && n.children.length) {
+                            html += buildList(n.children);
+                        }
+                        html += '</li>';
+                    } else {
+                        var url = n.url || (baseUrl + '/' + n.path);
+                        html += '<li style="margin:2px 0;">📄 <a href="' + url + '" download style="color:#ff82a2; text-decoration:none;">' + escapeHtml(n.name) + '</a></li>';
+                    }
+                }
+                html += '</ul>';
+                return html;
+            }
+
+            libraryTree.innerHTML = buildList(items);
         }
     </script>
 </body>

@@ -1,11 +1,23 @@
 import express from "express";
 import axios from "axios";
 import cors from "cors";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const COMICS_DIR = path.join(__dirname, "../public/comics");
+
+if (!fs.existsSync(COMICS_DIR)) {
+    fs.mkdirSync(COMICS_DIR, { recursive: true });
+}
 
 const cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
@@ -29,12 +41,68 @@ function setCache(key, data) {
     });
 }
 
+// Đọc cây thư mục truyện để render UI dạng tree
+function readComicsTree(dir, baseUrl, relPath = "") {
+    const absDir = relPath ? path.join(dir, relPath) : dir;
+    let entries = [];
+
+    try {
+        const names = fs.readdirSync(absDir);
+        entries = names
+            .filter(name => !name.startsWith("."))
+            .map(name => {
+                const rel = relPath ? path.join(relPath, name) : name;
+                const full = path.join(dir, rel);
+                const stat = fs.statSync(full);
+
+                if (stat.isDirectory()) {
+                    return {
+                        type: "dir",
+                        name,
+                        path: rel.replace(/\\/g, "/"),
+                        children: readComicsTree(dir, baseUrl, rel)
+                    };
+                }
+
+                return {
+                    type: "file",
+                    name,
+                    path: rel.replace(/\\/g, "/"),
+                    size: stat.size,
+                    modified: stat.mtime,
+                    url: `${baseUrl}/${rel.replace(/\\/g, "/")}`
+                };
+            })
+            .sort((a, b) => {
+                // Thư mục lên trước, sau đó sort theo tên
+                if (a.type !== b.type) return a.type === "dir" ? -1 : 1;
+                return a.name.localeCompare(b.name, "vi");
+            });
+    } catch (err) {
+        console.error("readComicsTree error:", err.message);
+    }
+
+    return entries;
+}
+
+// API trả về cây thư mục truyện
+app.get("/api/library", (_req, res) => {
+    const baseUrl = "/comics";
+    const tree = readComicsTree(COMICS_DIR, baseUrl);
+
+    res.json({
+        baseUrl,
+        items: tree
+    });
+});
+
 app.get("/api/health", (req, res) => {
     res.json({
         status: 200,
         cache_size: cache.size,
         timestamp: new Date().toISOString(),
-        message: "OK"
+        message: "OK",
+        comics_dir: "/comics"
     });
 });
 
