@@ -10,7 +10,7 @@
             font-family: sans-serif; 
             background: #000; 
             color: #fff; 
-            overflow: hidden;
+            overflow-x: hidden;
             touch-action: manipulation;
         }
         .header { 
@@ -34,166 +34,196 @@
             image-rendering: crisp-edges;
         }
         
-        /* VIRTUAL CONTROLS */
+        /* GAME LIST - TRÊN CONTROLS */
+        .game-list { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px; 
+            padding: 10px;
+            max-height: 150px; 
+            overflow-y: auto;
+            background: #0a0a0a;
+        }
+        .btn { 
+            padding: 12px; 
+            background: #1a1a1a; 
+            border: 1px solid #444; 
+            color: #fff; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .btn:active { background: #ff0050; }
+        
+        /* VIRTUAL CONTROLS - BOTTOM FIXED */
         .controls-container {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 200px;
-            background: rgba(0,0,0,0.9);
+            height: 180px;
+            background: rgba(0,0,0,0.95);
             display: flex;
             justify-content: space-between;
-            padding: 10px 20px;
-            border-top: 1px solid #333;
+            align-items: center;
+            padding: 10px 15px;
+            border-top: 2px solid #333;
+            z-index: 1000;
         }
         
         /* D-PAD (Trái) */
         .dpad {
             position: relative;
-            width: 140px;
-            height: 140px;
+            width: 130px;
+            height: 130px;
+            flex-shrink: 0;
         }
         .dpad-btn {
             position: absolute;
-            width: 45px;
-            height: 45px;
+            width: 42px;
+            height: 42px;
             background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-            border: 2px solid #444;
+            border: 2px solid #555;
             border-radius: 8px;
             color: #fff;
-            font-size: 20px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
             cursor: pointer;
+            transition: all 0.1s;
         }
         .dpad-btn:active { 
-            background: #ff0050;
-            transform: scale(0.95);
+            background: #00ff88;
+            border-color: #00ff88;
+            color: #000;
+            transform: scale(0.92);
         }
-        .dpad-btn.up { top: 0; left: 47px; }
-        .dpad-btn.down { bottom: 0; left: 47px; }
-        .dpad-btn.left { top: 47px; left: 0; }
-        .dpad-btn.right { top: 47px; right: 0; }
+        .dpad-btn.up { top: 0; left: 44px; }
+        .dpad-btn.down { bottom: 0; left: 44px; }
+        .dpad-btn.left { top: 44px; left: 0; }
+        .dpad-btn.right { top: 44px; right: 0; }
         .dpad-center {
             position: absolute;
-            top: 47px;
-            left: 47px;
-            width: 45px;
-            height: 45px;
+            top: 44px;
+            left: 44px;
+            width: 42px;
+            height: 42px;
             background: #0a0a0a;
             border: 2px solid #222;
             border-radius: 50%;
         }
         
+        /* CENTER BUTTONS (START/SELECT) */
+        .center-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .small-btn {
+            padding: 6px 20px;
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 20px;
+            font-size: 9px;
+            color: #aaa;
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .small-btn:active {
+            background: #ff0050;
+            border-color: #ff0050;
+            color: #fff;
+        }
+        
         /* NÚT A-B (Phải) */
         .ab-buttons {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
+            flex-shrink: 0;
         }
         .action-btn {
-            width: 60px;
-            height: 60px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
-            border: 3px solid #444;
-            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 3px solid;
             color: #fff;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
             cursor: pointer;
+            transition: all 0.1s;
         }
         .action-btn:active {
-            background: #ff0050;
-            transform: scale(0.9);
+            transform: scale(0.88);
         }
         .action-btn.b { 
             background: linear-gradient(145deg, #ff0050, #cc0040);
-            border-color: #ff0050;
+            border-color: #ff0070;
+        }
+        .action-btn.b:active {
+            background: #ff0070;
         }
         .action-btn.a {
             background: linear-gradient(145deg, #00ff88, #00cc66);
-            border-color: #00ff88;
+            border-color: #00ffaa;
             color: #000;
         }
-        
-        /* START/SELECT */
-        .middle-btns {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: 170px;
-            display: flex;
-            gap: 10px;
+        .action-btn.a:active {
+            background: #00ffaa;
         }
-        .small-btn {
-            padding: 8px 16px;
-            background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 20px;
-            font-size: 10px;
-            color: #888;
-            cursor: pointer;
-            user-select: none;
-        }
-        .small-btn:active {
-            background: #ff0050;
-            color: #fff;
-        }
-        
-        .game-list { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 6px; 
-            padding: 8px;
-            max-height: 120px; 
-            overflow-y: auto; 
-        }
-        .btn { 
-            padding: 10px; 
-            background: #1a1a1a; 
-            border: 1px solid #444; 
-            color: #fff; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 11px; 
-        }
-        .btn:active { background: #ff0050; }
         
         #debug {
             position: fixed;
             top: 40px;
             right: 5px;
-            background: rgba(0,0,0,0.8);
-            padding: 5px;
+            background: rgba(0,0,0,0.9);
+            padding: 6px;
             font-size: 9px;
             border: 1px solid #333;
-            max-width: 120px;
+            max-width: 140px;
+            border-radius: 4px;
+            z-index: 999;
+        }
+        
+        /* SCROLL HINT */
+        .scroll-hint {
+            text-align: center;
+            padding: 5px;
+            font-size: 10px;
+            color: #666;
+            background: #0a0a0a;
         }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <a href="/" style="color: #ff0050; text-decoration: none;">🏠 Home</a>
-    <span style="float: right; color: #666;">NES Mobile</span>
+    <a href="/" style="color: #ff0050; text-decoration: none;">🏠 Trang chủ</a>
+    <span style="float: right; color: #666;">NES Mobile v2</span>
 </div>
 
 <div id="game-canvas">
     <div id="status" style="padding-top: 30%; font-size: 12px; color: #777;">
-        Chọn game bên dưới
+        👇 Chọn game bên dưới 👇
     </div>
 </div>
 
-<div class="middle-btns">
-    <div class="small-btn" id="btn-select">SELECT</div>
-    <div class="small-btn" id="btn-start">START</div>
+<div class="scroll-hint">↓ Chọn game (có thể cuộn) ↓</div>
+
+<div class="game-list" id="menu">
+    <button class="btn" onclick="loadTestROM()">🧪 Test: Super Mario</button>
 </div>
 
 <div class="controls-container">
@@ -206,15 +236,17 @@
         <div class="dpad-center"></div>
     </div>
     
+    <!-- START/SELECT -->
+    <div class="center-btns">
+        <div class="small-btn" id="btn-select">SELECT</div>
+        <div class="small-btn" id="btn-start">START</div>
+    </div>
+    
     <!-- A-B BUTTONS -->
     <div class="ab-buttons">
         <div class="action-btn b" id="btn-b">B</div>
         <div class="action-btn a" id="btn-a">A</div>
     </div>
-</div>
-
-<div class="game-list" id="menu">
-    <button class="btn" onclick="loadTestROM()">🧪 Test: Super Mario</button>
 </div>
 
 <div id="debug">Game: Chưa load<br>Input: None</div>
@@ -248,18 +280,23 @@
                 ctx.putImageData(imageData, 0, 0);
             }
         });
+        console.log("✅ NES Engine initialized");
     }
 
-    // NÚT ẢO -> NES BUTTON
+    // MAPPING ĐÚNG CHUẨN JSNES
+    // jsnes.Controller constants:
+    // BUTTON_A = 0, BUTTON_B = 1, BUTTON_SELECT = 2, BUTTON_START = 3,
+    // BUTTON_UP = 4, BUTTON_DOWN = 5, BUTTON_LEFT = 6, BUTTON_RIGHT = 7
+    
     const BTN_MAP = {
-        'btn-up': 0,
-        'btn-down': 1,
-        'btn-left': 2,
-        'btn-right': 3,
-        'btn-start': 4,
-        'btn-select': 5,
-        'btn-a': 6,
-        'btn-b': 7
+        'btn-a': 0,      // A button
+        'btn-b': 1,      // B button  
+        'btn-select': 2, // Select
+        'btn-start': 3,  // Start
+        'btn-up': 4,     // Up
+        'btn-down': 5,   // Down
+        'btn-left': 6,   // Left
+        'btn-right': 7   // Right
     };
 
     // XỬ LÝ TOUCH/CLICK NÚT ẢO
@@ -278,6 +315,15 @@
         
         // TOUCH END
         btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!gameLoaded || !nes) return;
+            nes.buttonUp(1, nesBtn);
+            activeButtons.delete(btnId);
+            updateDebug();
+        }, { passive: false });
+        
+        // TOUCH CANCEL (nếu ngón tay rời khỏi nút)
+        btn.addEventListener('touchcancel', (e) => {
             e.preventDefault();
             if (!gameLoaded || !nes) return;
             nes.buttonUp(1, nesBtn);
@@ -313,15 +359,16 @@
     });
 
     // HỖ TRỢ BÀN PHÍM CHO BLACKBERRY (QWERTY)
+    // Mapping đúng theo chuẩn JSNES
     const KEYBOARD_MAP = {
-        87: 0,  // W = Up
-        83: 1,  // S = Down
-        65: 2,  // A = Left
-        68: 3,  // D = Right
-        13: 4,  // Enter = Start
-        16: 5,  // Shift = Select
-        75: 6,  // K = A (Nhảy)
-        74: 7   // J = B (Bắn)
+        75: 0,  // K = A (Nhảy)
+        74: 1,  // J = B (Bắn/Chạy)
+        16: 2,  // Shift = Select
+        13: 3,  // Enter = Start
+        87: 4,  // W = Up
+        83: 5,  // S = Down
+        65: 6,  // A = Left
+        68: 7   // D = Right
     };
 
     document.addEventListener('keydown', (e) => {
@@ -329,6 +376,12 @@
         if (KEYBOARD_MAP[e.keyCode] !== undefined) {
             e.preventDefault();
             nes.buttonDown(1, KEYBOARD_MAP[e.keyCode]);
+            
+            // Debug keyboard
+            const keyNames = ['A','B','SEL','START','↑','↓','←','→'];
+            const debugKey = keyNames[KEYBOARD_MAP[e.keyCode]];
+            document.getElementById('debug').innerHTML = 
+                `Game: ✅<br>Key: ${debugKey} (${e.keyCode})`;
         }
     });
 
@@ -345,14 +398,17 @@
             id.replace('btn-', '').toUpperCase()
         ).join('+');
         document.getElementById('debug').innerHTML = 
-            `Game: ${gameLoaded ? '✅' : '❌'}<br>Input: ${btns || 'None'}`;
+            `Game: ${gameLoaded ? '✅' : '❌'}<br>Touch: ${btns || 'None'}`;
     }
 
-    // LOAD ROM
+    // LOAD ROM TỪ SERVER
     function launch(romName) {
-        document.getElementById('status').innerHTML = "⌛ Loading...";
+        document.getElementById('status').innerHTML = "⌛ Đang tải...";
         
-        if (gameLoop) clearInterval(gameLoop);
+        if (gameLoop) {
+            clearInterval(gameLoop);
+            gameLoop = null;
+        }
         if (!nes) initNES();
         
         const xhr = new XMLHttpRequest();
@@ -369,22 +425,26 @@
                 
                 gameLoop = setInterval(() => { nes.frame(); }, 1000 / 60);
                 updateDebug();
+                console.log("✅ Loaded:", romName);
             } else {
-                alert("❌ ROM not found!");
+                alert("❌ Không tìm thấy ROM!");
             }
         };
         
         xhr.send();
     }
 
-    // TEST ROM
+    // TEST ROM (SUPER MARIO)
     function loadTestROM() {
         const testURL = "https://raw.githubusercontent.com/mantasjasikenas/nes-emulator/master/roms/Super%20Mario%20Bros%20(E).nes";
         
-        document.getElementById('status').innerHTML = "⌛ Loading Mario...";
+        document.getElementById('status').innerHTML = "⌛ Đang tải Mario...";
         
         if (!nes) initNES();
-        if (gameLoop) clearInterval(gameLoop);
+        if (gameLoop) {
+            clearInterval(gameLoop);
+            gameLoop = null;
+        }
         
         const xhr = new XMLHttpRequest();
         xhr.open("GET", testURL);
@@ -406,13 +466,14 @@
                 
                 gameLoop = setInterval(() => { nes.frame(); }, 1000 / 60);
                 updateDebug();
+                console.log("✅ Mario loaded! Use K=jump, J=run, WASD=move");
             }
         };
         
         xhr.send();
     }
 
-    // LOAD MENU
+    // LOAD MENU TỪ API
     fetch('/api/roms')
         .then(res => res.json())
         .then(roms => {
@@ -423,7 +484,9 @@
                 ).join('');
             }
         })
-        .catch(() => {});
+        .catch(() => {
+            console.log("API /api/roms không khả dụng - dùng test ROM");
+        });
 </script>
 </body>
 </html>
