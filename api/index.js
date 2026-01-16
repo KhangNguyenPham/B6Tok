@@ -86,7 +86,7 @@ function readComicsTree(dir, baseUrl, relPath = "") {
 }
 
 app.get("/games", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public/games.html"));
+    res.sendFile(path.join(process.cwd(), "public", "games.html"));
 });
 
 const ROMS_DIR = path.join(__dirname, "../public/roms");
