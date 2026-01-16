@@ -1,23 +1,13 @@
 {
   "version": 2,
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/games",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/roms/(.*)",
-      "destination": "/public/roms/$1"
-    }
+  "builds": [
+    { "src": "api/index.js", "use": "@vercel/node" },
+    { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.js"
-    }
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/games", "dest": "/api/index.js" },
+    { "src": "/roms/(.*)", "dest": "/public/roms/$1" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
