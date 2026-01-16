@@ -122,6 +122,36 @@
         .dpad-btn.down { bottom: 0; left: 40px; }
         .dpad-btn.left { top: 40px; left: 0; }
         .dpad-btn.right { top: 40px; right: 0; }
+
+        .dpad-btn::after {
+            content: '';
+            width: 0; 
+            height: 0; 
+            border-style: solid;
+            position: absolute;
+        }
+
+        .up::after {
+            border-width: 0 7px 10px 7px;
+            border-color: transparent transparent #555 transparent;
+        }
+        .down::after {
+            border-width: 10px 7px 0 7px;
+            border-color: #555 transparent transparent transparent;
+        }
+        .left::after {
+            border-width: 7px 10px 7px 0;
+            border-color: transparent #555 transparent transparent;
+        }
+        .right::after {
+            border-width: 7px 0 7px 10px;
+            border-color: transparent transparent transparent #555;
+        }
+
+        .dpad-btn.active::after { border-color: transparent transparent #000 transparent; }
+        .dpad-btn.down.active::after { border-color: #000 transparent transparent transparent; }
+        .dpad-btn.left.active::after { border-color: transparent #000 transparent transparent; }
+        .dpad-btn.right.active::after { border-color: transparent transparent transparent #000; }
         
         /* CENTER BUTTONS */
         .center-btns { display: flex; flex-direction: column; gap: 10px; }
@@ -174,10 +204,10 @@
 
 <div class="controls-container">
     <div class="dpad">
-        <div class="dpad-btn up" id="btn-up">▲</div>
-        <div class="dpad-btn down" id="btn-down">▼</div>
-        <div class="dpad-btn left" id="btn-left">◀</div>
-        <div class="dpad-btn right" id="btn-right">▶</div>
+        <div class="dpad-btn up" id="btn-up"></div>
+        <div class="dpad-btn down" id="btn-down"></div>
+        <div class="dpad-btn left" id="btn-left"></div>
+        <div class="dpad-btn right" id="btn-right"></div>
     </div>
     
     <div class="center-btns">
