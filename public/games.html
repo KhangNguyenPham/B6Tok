@@ -110,10 +110,12 @@
             height: 40px;
             background: #2a2d3a;
             border-radius: 8px;
+            border: 3px solid #555;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #555;
+            box-shadow: 2px 2px 0 #000, inset -2px -2px 0 #222;
         }
         .dpad-btn.active { background: #00d9ff; color: #000; }
         .dpad-btn.up { top: 0; left: 40px; }
@@ -127,9 +129,11 @@
             padding: 6px 15px;
             background: #2a2d3a;
             border-radius: 15px;
+            border: 2px solid #555;
             font-size: 9px;
             color: #888;
             font-weight: bold;
+            box-shadow: 2px 2px 0 #000;
         }
         .small-btn.active { background: #e94560; color: #fff; }
         
@@ -143,9 +147,11 @@
             justify-content: center;
             font-weight: bold;
             font-size: 20px;
+            border: 4px solid;
+            box-shadow: 3px 3px 0 #000, inset -3px -3px 0 rgba(0,0,0,0.5);
         }
-        .action-btn.b { background: #ff4757; color: #fff; }
-        .action-btn.a { background: #1dd1a1; color: #000; }
+        .action-btn.b { background: #c44; color: #fff; border-color: #e66; }
+        .action-btn.a { background: #4c4; color: #000; border-color: #6e6;}
         .action-btn.active { opacity: 0.7; transform: scale(0.9); }
 
         #status { text-align: center; font-size: 12px; color: #555; margin-top: 20px; }
@@ -177,6 +183,7 @@
     <div class="center-btns">
         <div class="small-btn" id="btn-select">SELECT</div>
         <div class="small-btn" id="btn-start">START</div>
+        <div class="small-btn" id="btn-back">QUIT</div>
     </div>
     
     <div class="ab-buttons">
@@ -221,6 +228,23 @@
         if (selected) selected.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 
+    function quitGame() {
+        if (gameLoaded) {
+            clearInterval(gameLoop);
+            gameLoop = null;
+            gameLoaded = false;
+            nes = null; 
+
+            document.getElementById('game-canvas').innerHTML = `
+                <div id="rom-selector">
+                    <div class="selector-header">CHỌN GAME</div>
+                    <div id="rom-list-container"></div>
+                </div>`;
+            
+            renderRomSelector();
+        }
+    }
+
     // 2. LOGIC MENU (CHỈ CHẠY KHI CHƯA VÀO GAME)
     function handleMenuInput(btnId) {
         if (gameLoaded) return false;
@@ -242,14 +266,21 @@
     }
 
     // 3. KHỞI TẠO ĐIỀU KHIỂN
-    const BTN_MAP = { 'btn-a': 0, 'btn-b': 1, 'btn-select': 2, 'btn-start': 3, 'btn-up': 4, 'btn-down': 5, 'btn-left': 6, 'btn-right': 7 };
+    const BTN_MAP = { 'btn-a': 0, 'btn-b': 1, 'btn-select': 2, 'btn-start': 3, 'btn-up': 4, 'btn-down': 5, 'btn-left': 6, 'btn-right': 7, 'btn-back': null };
 
     Object.keys(BTN_MAP).forEach(btnId => {
         const btn = document.getElementById(btnId);
-        
+        if (!btn) return;
+
         const onDown = (e) => {
             e.preventDefault();
             btn.classList.add('active');
+
+            if (btnId === 'btn-back') {
+                quitGame();
+                return;
+            }
+
             if (!handleMenuInput(btnId) && gameLoaded && nes) {
                 nes.buttonDown(1, BTN_MAP[btnId]);
             }
@@ -258,7 +289,10 @@
         const onUp = (e) => {
             e.preventDefault();
             btn.classList.remove('active');
-            if (gameLoaded && nes) nes.buttonUp(1, BTN_MAP[btnId]);
+            
+            if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
+                nes.buttonUp(1, BTN_MAP[btnId]);
+            }
         };
 
         btn.addEventListener('touchstart', onDown, { passive: false });
@@ -269,38 +303,38 @@
 
     // 4. HÀM CHẠY GAME
     function launch(romName) {
-        document.getElementById('rom-selector').style.display = 'none';
+        const canvasContainer = document.getElementById('game-canvas');
+        canvasContainer.innerHTML = '<canvas width="256" height="240"></canvas>';
         
-        if (!nes) {
-            nes = new jsnes.NES({
-                onFrame: (frameBuffer) => {
-                    const canvas = document.querySelector('canvas');
-                    if (!canvas) return;
-                    const ctx = canvas.getContext('2d');
-                    const imageData = ctx.getImageData(0, 0, 256, 240);
-                    const pixels = imageData.data;
-                    for (let i = 0; i < frameBuffer.length; i++) {
-                        const pixel = frameBuffer[i];
-                        pixels[i * 4] = pixel & 0xFF;
-                        pixels[i * 4 + 1] = (pixel >> 8) & 0xFF;
-                        pixels[i * 4 + 2] = (pixel >> 16) & 0xFF;
-                        pixels[i * 4 + 3] = 0xFF;
-                    }
-                    ctx.putImageData(imageData, 0, 0);
+        nes = new jsnes.NES({
+            onFrame: (frameBuffer) => {
+                const canvas = canvasContainer.querySelector('canvas');
+                if (!canvas || !gameLoaded) return;
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, 256, 240);
+                const pixels = imageData.data;
+                for (let i = 0; i < frameBuffer.length; i++) {
+                    const pixel = frameBuffer[i];
+                    pixels[i * 4] = pixel & 0xFF;
+                    pixels[i * 4 + 1] = (pixel >> 8) & 0xFF;
+                    pixels[i * 4 + 2] = (pixel >> 16) & 0xFF;
+                    pixels[i * 4 + 3] = 0xFF;
                 }
-            });
-        }
+                ctx.putImageData(imageData, 0, 0);
+            }
+        });
 
         const xhr = new XMLHttpRequest();
         xhr.open("GET", '/roms/' + romName);
         xhr.overrideMimeType("text/plain; charset=x-user-defined");
         xhr.onload = function() {
             if (this.status === 200) {
-                document.getElementById('game-canvas').innerHTML = '<canvas width="256" height="240"></canvas>';
                 nes.loadROM(this.responseText);
                 gameLoaded = true;
                 if (gameLoop) clearInterval(gameLoop);
-                gameLoop = setInterval(() => nes.frame(), 17);
+                gameLoop = setInterval(() => {
+                    if (gameLoaded && nes) nes.frame();
+                }, 17);
             }
         };
         xhr.send();
