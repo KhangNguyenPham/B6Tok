@@ -85,6 +85,21 @@ function readComicsTree(dir, baseUrl, relPath = "") {
     return entries;
 }
 
+app.get("/games", (req, res) => {
+    res.sendFile(path.join(__dirname, "../public/games.html"));
+});
+
+const ROMS_DIR = path.join(__dirname, "../public/roms");
+
+app.get("/api/roms", (req, res) => {
+    try {
+        const files = fs.readdirSync(ROMS_DIR);
+        const roms = files.filter(f => f.endsWith('.nes'));
+        res.json(roms);
+    } catch (e) {
+        res.json([]);
+    }
+});
 // API trả về cây thư mục truyện
 app.get("/api/library", (_req, res) => {
     const baseUrl = "/comics";

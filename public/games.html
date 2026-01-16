@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>B6 Games - NES Mobile</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: sans-serif; 
+            background: #000; 
+            color: #fff; 
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        .header { 
+            padding: 8px; 
+            background: #111; 
+            border-bottom: 1px solid #333;
+            font-size: 12px;
+        }
+        #game-canvas { 
+            width: 100%; 
+            max-width: 480px; 
+            margin: 0 auto;
+            background: #111; 
+            aspect-ratio: 256/240;
+            position: relative;
+        }
+        canvas { 
+            width: 100%; 
+            height: 100%; 
+            image-rendering: pixelated; 
+            image-rendering: crisp-edges;
+        }
+        
+        /* VIRTUAL CONTROLS */
+        .controls-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            border-top: 1px solid #333;
+        }
+        
+        /* D-PAD (Trái) */
+        .dpad {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+        .dpad-btn {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            cursor: pointer;
+        }
+        .dpad-btn:active { 
+            background: #ff0050;
+            transform: scale(0.95);
+        }
+        .dpad-btn.up { top: 0; left: 47px; }
+        .dpad-btn.down { bottom: 0; left: 47px; }
+        .dpad-btn.left { top: 47px; left: 0; }
+        .dpad-btn.right { top: 47px; right: 0; }
+        .dpad-center {
+            position: absolute;
+            top: 47px;
+            left: 47px;
+            width: 45px;
+            height: 45px;
+            background: #0a0a0a;
+            border: 2px solid #222;
+            border-radius: 50%;
+        }
+        
+        /* NÚT A-B (Phải) */
+        .ab-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #444;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            cursor: pointer;
+        }
+        .action-btn:active {
+            background: #ff0050;
+            transform: scale(0.9);
+        }
+        .action-btn.b { 
+            background: linear-gradient(145deg, #ff0050, #cc0040);
+            border-color: #ff0050;
+        }
+        .action-btn.a {
+            background: linear-gradient(145deg, #00ff88, #00cc66);
+            border-color: #00ff88;
+            color: #000;
+        }
+        
+        /* START/SELECT */
+        .middle-btns {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 170px;
+            display: flex;
+            gap: 10px;
+        }
+        .small-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 20px;
+            font-size: 10px;
+            color: #888;
+            cursor: pointer;
+            user-select: none;
+        }
+        .small-btn:active {
+            background: #ff0050;
+            color: #fff;
+        }
+        
+        .game-list { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 6px; 
+            padding: 8px;
+            max-height: 120px; 
+            overflow-y: auto; 
+        }
+        .btn { 
+            padding: 10px; 
+            background: #1a1a1a; 
+            border: 1px solid #444; 
+            color: #fff; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 11px; 
+        }
+        .btn:active { background: #ff0050; }
+        
+        #debug {
+            position: fixed;
+            top: 40px;
+            right: 5px;
+            background: rgba(0,0,0,0.8);
+            padding: 5px;
+            font-size: 9px;
+            border: 1px solid #333;
+            max-width: 120px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="/" style="color: #ff0050; text-decoration: none;">🏠 Home</a>
+    <span style="float: right; color: #666;">NES Mobile</span>
+</div>
+
+<div id="game-canvas">
+    <div id="status" style="padding-top: 30%; font-size: 12px; color: #777;">
+        Chọn game bên dưới
+    </div>
+</div>
+
+<div class="middle-btns">
+    <div class="small-btn" id="btn-select">SELECT</div>
+    <div class="small-btn" id="btn-start">START</div>
+</div>
+
+<div class="controls-container">
+    <!-- D-PAD -->
+    <div class="dpad">
+        <div class="dpad-btn up" id="btn-up">▲</div>
+        <div class="dpad-btn down" id="btn-down">▼</div>
+        <div class="dpad-btn left" id="btn-left">◀</div>
+        <div class="dpad-btn right" id="btn-right">▶</div>
+        <div class="dpad-center"></div>
+    </div>
+    
+    <!-- A-B BUTTONS -->
+    <div class="ab-buttons">
+        <div class="action-btn b" id="btn-b">B</div>
+        <div class="action-btn a" id="btn-a">A</div>
+    </div>
+</div>
+
+<div class="game-list" id="menu">
+    <button class="btn" onclick="loadTestROM()">🧪 Test: Super Mario</button>
+</div>
+
+<div id="debug">Game: Chưa load<br>Input: None</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+<script>
+    let nes = null;
+    let gameLoop = null;
+    let gameLoaded = false;
+    let activeButtons = new Set();
+
+    // KHỞI TẠO NES
+    function initNES() {
+        nes = new jsnes.NES({
+            onFrame: function(frameBuffer) {
+                const canvas = document.querySelector('canvas');
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, 256, 240);
+                const pixels = imageData.data;
+                
+                for (let i = 0; i < frameBuffer.length; i++) {
+                    const pixel = frameBuffer[i];
+                    pixels[i * 4] = pixel & 0xFF;
+                    pixels[i * 4 + 1] = (pixel >> 8) & 0xFF;
+                    pixels[i * 4 + 2] = (pixel >> 16) & 0xFF;
+                    pixels[i * 4 + 3] = 0xFF;
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+            }
+        });
+    }
+
+    // NÚT ẢO -> NES BUTTON
+    const BTN_MAP = {
+        'btn-up': 0,
+        'btn-down': 1,
+        'btn-left': 2,
+        'btn-right': 3,
+        'btn-start': 4,
+        'btn-select': 5,
+        'btn-a': 6,
+        'btn-b': 7
+    };
+
+    // XỬ LÝ TOUCH/CLICK NÚT ẢO
+    Object.keys(BTN_MAP).forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        const nesBtn = BTN_MAP[btnId];
+        
+        // TOUCH START
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameLoaded || !nes) return;
+            nes.buttonDown(1, nesBtn);
+            activeButtons.add(btnId);
+            updateDebug();
+        }, { passive: false });
+        
+        // TOUCH END
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!gameLoaded || !nes) return;
+            nes.buttonUp(1, nesBtn);
+            activeButtons.delete(btnId);
+            updateDebug();
+        }, { passive: false });
+        
+        // MOUSE (cho desktop test)
+        btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (!gameLoaded || !nes) return;
+            nes.buttonDown(1, nesBtn);
+            activeButtons.add(btnId);
+            updateDebug();
+        });
+        
+        btn.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            if (!gameLoaded || !nes) return;
+            nes.buttonUp(1, nesBtn);
+            activeButtons.delete(btnId);
+            updateDebug();
+        });
+        
+        btn.addEventListener('mouseleave', (e) => {
+            if (!gameLoaded || !nes) return;
+            if (activeButtons.has(btnId)) {
+                nes.buttonUp(1, nesBtn);
+                activeButtons.delete(btnId);
+                updateDebug();
+            }
+        });
+    });
+
+    // HỖ TRỢ BÀN PHÍM CHO BLACKBERRY (QWERTY)
+    const KEYBOARD_MAP = {
+        87: 0,  // W = Up
+        83: 1,  // S = Down
+        65: 2,  // A = Left
+        68: 3,  // D = Right
+        13: 4,  // Enter = Start
+        16: 5,  // Shift = Select
+        75: 6,  // K = A (Nhảy)
+        74: 7   // J = B (Bắn)
+    };
+
+    document.addEventListener('keydown', (e) => {
+        if (!gameLoaded || !nes) return;
+        if (KEYBOARD_MAP[e.keyCode] !== undefined) {
+            e.preventDefault();
+            nes.buttonDown(1, KEYBOARD_MAP[e.keyCode]);
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (!gameLoaded || !nes) return;
+        if (KEYBOARD_MAP[e.keyCode] !== undefined) {
+            e.preventDefault();
+            nes.buttonUp(1, KEYBOARD_MAP[e.keyCode]);
+        }
+    });
+
+    function updateDebug() {
+        const btns = Array.from(activeButtons).map(id => 
+            id.replace('btn-', '').toUpperCase()
+        ).join('+');
+        document.getElementById('debug').innerHTML = 
+            `Game: ${gameLoaded ? '✅' : '❌'}<br>Input: ${btns || 'None'}`;
+    }
+
+    // LOAD ROM
+    function launch(romName) {
+        document.getElementById('status').innerHTML = "⌛ Loading...";
+        
+        if (gameLoop) clearInterval(gameLoop);
+        if (!nes) initNES();
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", '/roms/' + romName);
+        xhr.overrideMimeType("text/plain; charset=x-user-defined");
+        
+        xhr.onload = function() {
+            if (this.status === 200) {
+                document.getElementById('game-canvas').innerHTML = 
+                    '<canvas width="256" height="240"></canvas>';
+                
+                nes.loadROM(this.responseText);
+                gameLoaded = true;
+                
+                gameLoop = setInterval(() => { nes.frame(); }, 1000 / 60);
+                updateDebug();
+            } else {
+                alert("❌ ROM not found!");
+            }
+        };
+        
+        xhr.send();
+    }
+
+    // TEST ROM
+    function loadTestROM() {
+        const testURL = "https://raw.githubusercontent.com/mantasjasikenas/nes-emulator/master/roms/Super%20Mario%20Bros%20(E).nes";
+        
+        document.getElementById('status').innerHTML = "⌛ Loading Mario...";
+        
+        if (!nes) initNES();
+        if (gameLoop) clearInterval(gameLoop);
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", testURL);
+        xhr.responseType = "arraybuffer";
+        
+        xhr.onload = function() {
+            if (this.status === 200) {
+                document.getElementById('game-canvas').innerHTML = 
+                    '<canvas width="256" height="240"></canvas>';
+                
+                const buffer = new Uint8Array(this.response);
+                let romString = "";
+                for (let i = 0; i < buffer.length; i++) {
+                    romString += String.fromCharCode(buffer[i]);
+                }
+                
+                nes.loadROM(romString);
+                gameLoaded = true;
+                
+                gameLoop = setInterval(() => { nes.frame(); }, 1000 / 60);
+                updateDebug();
+            }
+        };
+        
+        xhr.send();
+    }
+
+    // LOAD MENU
+    fetch('/api/roms')
+        .then(res => res.json())
+        .then(roms => {
+            const menu = document.getElementById('menu');
+            if (roms.length > 0) {
+                menu.innerHTML = roms.map(name => 
+                    `<button class="btn" onclick="launch('${name}')">${name.replace('.nes','')}</button>`
+                ).join('');
+            }
+        })
+        .catch(() => {});
+</script>
+</body>
+</html>
