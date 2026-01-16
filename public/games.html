@@ -336,6 +336,10 @@
         const canvasContainer = document.getElementById('game-canvas');
         canvasContainer.innerHTML = '<canvas width="256" height="240"></canvas>';
         
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioCtx();
+        let audioBuffer = [];
+
         nes = new jsnes.NES({
             onFrame: (frameBuffer) => {
                 const canvas = canvasContainer.querySelector('canvas');
@@ -351,6 +355,20 @@
                     pixels[i * 4 + 3] = 0xFF;
                 }
                 ctx.putImageData(imageData, 0, 0);
+            },
+
+            onAudioSample: (left, right) => {
+                audioBuffer.push(left, right);
+                if (audioBuffer.length >= 4096) {
+                    const buffer = audioCtx.createBuffer(2, 2048, 44100);
+                    buffer.getChannelData(0).set(audioBuffer.filter((_,i) => i%2===0));
+                    buffer.getChannelData(1).set(audioBuffer.filter((_,i) => i%2!==0));
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioCtx.destination);
+                    source.start();
+                    audioBuffer = [];
+                }
             }
         });
 
@@ -359,6 +377,9 @@
         xhr.overrideMimeType("text/plain; charset=x-user-defined");
         xhr.onload = function() {
             if (this.status === 200) {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
                 nes.loadROM(this.responseText);
                 gameLoaded = true;
                 if (gameLoop) clearInterval(gameLoop);
