@@ -42,7 +42,8 @@
         /* EMULATOR SCREEN */
         #game-canvas { 
             width: 100%;
-            max-width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
             flex: 1;
             background: #000;
             position: relative;
@@ -50,6 +51,21 @@
         }
         
         canvas { width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; }
+        
+        /* DEBUG PANEL */
+        #debug-panel {
+            position: fixed;
+            bottom: 5px;
+            left: 5px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 5px 10px;
+            font-size: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            z-index: 999;
+            display: none;
+        }
         
         /* VIRTUAL ROM SELECTOR UI */
         #rom-selector {
@@ -207,6 +223,8 @@
     </select>
 </div>
 
+<div id="debug-panel"></div>
+
 <div id="game-canvas">
     <div id="rom-selector">
         <div class="selector-header">Chọn GAME</div>
@@ -244,6 +262,38 @@
     let romFiles = [];
     let selectedIndex = 0;
     let controlMode = 'touch'; // Mặc định là touch
+    let debugMode = false; // Debug mode
+    
+    // DEBUG FUNCTION
+    function debugLog(msg) {
+        const panel = document.getElementById('debug-panel');
+        if (debugMode) {
+            panel.style.display = 'block';
+            panel.textContent = msg;
+        }
+    }
+    
+    // Bật debug mode khi nhấn phím 7 ba lần liên tiếp (dễ hơn)
+    let debugKeyCount = 0;
+    let debugTimeout = null;
+    document.addEventListener('keypress', (e) => {
+        if (e.key === '7') {
+            debugKeyCount++;
+            clearTimeout(debugTimeout);
+            debugTimeout = setTimeout(() => { debugKeyCount = 0; }, 1000);
+            
+            if (debugKeyCount >= 3) {
+                debugMode = !debugMode;
+                document.getElementById('debug-panel').style.display = debugMode ? 'block' : 'none';
+                if (debugMode) {
+                    debugLog('🔍 DEBUG MODE: ON - Bấm phím để xem mã');
+                } else {
+                    document.getElementById('debug-panel').textContent = '';
+                }
+                debugKeyCount = 0;
+            }
+        }
+    });
 
     // LẤY CHỂ ĐỘ ĐIỀU KHIỂN
     const modeSelector = document.getElementById('control-mode');
@@ -285,9 +335,13 @@
         }
         
         // HƯỚNG DẪN PHÍM (CHỈ HIỆN KHI DÙNG BÀN PHÍM VẬT LÝ)
-        const guide = controlMode === 'keyboard' ? `<div style='padding:10px; background:rgba(233,69,96,0.2); border-radius:6px; margin-bottom:10px; font-size:11px; line-height:1.6;'>
-            <div style='color:#e94560; font-weight:bold; margin-bottom:5px;'>⌨️ HƯỚNG DẪN PHÍM:</div>
-            <div>W/S = Di chuyển | ENTER = Chọn game</div>
+        const guide = controlMode === 'keyboard' ? `<div style='padding:10px; background:rgba(233,69,96,0.2); border-radius:6px; margin-bottom:10px; font-size:10px; line-height:1.5;'>
+            <div style='color:#e94560; font-weight:bold; margin-bottom:5px;'>⌨️ PHÍM ĐIỀU KHIỂN:</div>
+            <div>W/S hoặc ↑↓ = Di chuyển</div>
+            <div>ENTER/9/0 = START chọn game</div>
+            <div>---</div>
+            <div style='color:#888; font-size:9px;'>Trong game: WASD=Move | K/Z/1=A | L/X/3=B | SPACE=Select | Q=Quit</div>
+            <div style='color:#0f0; font-size:9px; margin-top:3px;'>💡 Bấm phím 7 ba lần nhanh để bật DEBUG</div>
         </div>` : '';
         
         container.innerHTML = guide + romFiles.map((name, index) => `
@@ -352,37 +406,42 @@
     };
 
     // MAP PHÍM CỨNG CHO BLACKBERRY Q20 VÀ BÀN PHÍM VẬT LÝ
+    // THÊM NHIỀU PHÍM DỰ PHÒNG VÌ BLACKBERRY CÓ THỂ GỬI MÃ KHÁC
     const KEYBOARD_MAP = {
-        'w': 'btn-up',           // w = Lên
-        'W': 'btn-up',           // W = Lên
-        's': 'btn-down',         // s = Xuống
-        'S': 'btn-down',         // S = Xuống
-        'a': 'btn-left',         // a = Trái
-        'A': 'btn-left',         // A = Trái
-        'd': 'btn-right',        // d = Phải
-        'D': 'btn-right',        // D = Phải
-        'Enter': 'btn-start',    // Enter = START
-        'q': 'btn-back',         // q = QUIT
-        'Q': 'btn-back',         // Q = QUIT
-        'k': 'btn-a',            // k = A
-        'K': 'btn-a',            // K = A
-        'l': 'btn-b',            // l = B
-        'L': 'btn-b',            // L = B
-        ' ': 'btn-select'        // Space = SELECT
+        // Phím di chuyển - nhiều lựa chọn
+        'w': 'btn-up', 'W': 'btn-up', 'ArrowUp': 'btn-up', '8': 'btn-up',
+        's': 'btn-down', 'S': 'btn-down', 'ArrowDown': 'btn-down', '2': 'btn-down',
+        'a': 'btn-left', 'A': 'btn-left', 'ArrowLeft': 'btn-left', '4': 'btn-left',
+        'd': 'btn-right', 'D': 'btn-right', 'ArrowRight': 'btn-right', '6': 'btn-right',
+        
+        // Phím hành động - nhiều lựa chọn
+        'k': 'btn-a', 'K': 'btn-a', 'z': 'btn-a', 'Z': 'btn-a', '1': 'btn-a',
+        'l': 'btn-b', 'L': 'btn-b', 'x': 'btn-b', 'X': 'btn-b', '3': 'btn-b',
+        
+        // Phím điều khiển
+        ' ': 'btn-select', 'Shift': 'btn-select', '5': 'btn-select',
+        'Enter': 'btn-start', '9': 'btn-start', '0': 'btn-start',
+        'q': 'btn-back', 'Q': 'btn-back', 'Escape': 'btn-back'
     };
 
     // XỬ LÝ BÀN PHÍM CỨNG (CHỈ KHI CHỌN CHỂ ĐỘ KEYBOARD)
     document.addEventListener('keydown', (e) => {
-        if (controlMode !== 'keyboard') return; // Chỉ xử lý khi ở chế độ keyboard
+        debugLog(`KeyDown: "${e.key}" | Code: ${e.code} | KeyCode: ${e.keyCode}`);
+        
+        if (controlMode !== 'keyboard') return;
         
         const btnId = KEYBOARD_MAP[e.key];
-        if (!btnId) return;
+        if (!btnId) {
+            debugLog(`⚠️ Unmapped key: "${e.key}"`);
+            return;
+        }
         
         e.preventDefault();
         const btn = document.getElementById(btnId);
         if (!btn || btn.classList.contains('active')) return;
         
         btn.classList.add('active');
+        debugLog(`✓ ${btnId} pressed`);
 
         if (btnId === 'btn-back') {
             quitGame();
@@ -391,11 +450,12 @@
 
         if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
             nes.buttonDown(1, BTN_MAP[btnId]);
+            debugLog(`✓ NES button ${BTN_MAP[btnId]} DOWN`);
         }
     });
 
     document.addEventListener('keyup', (e) => {
-        if (controlMode !== 'keyboard') return; // Chỉ xử lý khi ở chế độ keyboard
+        if (controlMode !== 'keyboard') return;
         
         const btnId = KEYBOARD_MAP[e.key];
         if (!btnId) return;
@@ -408,6 +468,7 @@
         
         if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
             nes.buttonUp(1, BTN_MAP[btnId]);
+            debugLog(`✓ NES button ${BTN_MAP[btnId]} UP`);
         }
     });
 
