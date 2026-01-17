@@ -42,15 +42,14 @@
         /* EMULATOR SCREEN */
         #game-canvas { 
             width: 100%;
-            max-width: 512px; 
-            margin: 10px auto;
+            max-width: 100%;
+            flex: 1;
             background: #000;
-            aspect-ratio: 256/240;
             position: relative;
             box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
         }
         
-        canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+        canvas { width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; }
         
         /* VIRTUAL ROM SELECTOR UI */
         #rom-selector {
@@ -251,14 +250,15 @@
     modeSelector.addEventListener('change', (e) => {
         controlMode = e.target.value;
         updateControlsVisibility();
+        if (!gameLoaded) {
+            renderRomSelector(); // Render lại danh sách khi đổi chế độ
+        }
     });
 
     function updateControlsVisibility() {
         const controlsContainer = document.querySelector('.controls-container');
         if (controlMode === 'keyboard' && !gameLoaded) {
             controlsContainer.style.display = 'none';
-        } else if (controlMode === 'keyboard' && gameLoaded) {
-            controlsContainer.style.display = 'flex';
         } else {
             controlsContainer.style.display = 'flex';
         }
@@ -353,14 +353,21 @@
 
     // MAP PHÍM CỨNG CHO BLACKBERRY Q20 VÀ BÀN PHÍM VẬT LÝ
     const KEYBOARD_MAP = {
-        'w': 'btn-up',           // W = Lên
-        's': 'btn-down',         // S = Xuống
-        'a': 'btn-left',         // A = Trái
-        'd': 'btn-right',        // D = Phải
+        'w': 'btn-up',           // w = Lên
+        'W': 'btn-up',           // W = Lên
+        's': 'btn-down',         // s = Xuống
+        'S': 'btn-down',         // S = Xuống
+        'a': 'btn-left',         // a = Trái
+        'A': 'btn-left',         // A = Trái
+        'd': 'btn-right',        // d = Phải
+        'D': 'btn-right',        // D = Phải
         'Enter': 'btn-start',    // Enter = START
-        'q': 'btn-back',         // Q = QUIT
-        'k': 'btn-a',            // K = A
-        'l': 'btn-b',            // L = B
+        'q': 'btn-back',         // q = QUIT
+        'Q': 'btn-back',         // Q = QUIT
+        'k': 'btn-a',            // k = A
+        'K': 'btn-a',            // K = A
+        'l': 'btn-b',            // l = B
+        'L': 'btn-b',            // L = B
         ' ': 'btn-select'        // Space = SELECT
     };
 
