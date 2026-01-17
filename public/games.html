@@ -425,8 +425,11 @@
     };
 
     // XỬ LÝ BÀN PHÍM CỨNG (CHỈ KHI CHỌN CHỂ ĐỘ KEYBOARD)
-    document.addEventListener('keydown', (e) => {
-        debugLog(`KeyDown: "${e.key}" | Code: ${e.code} | KeyCode: ${e.keyCode}`);
+    const pressedKeys = new Set(); // Theo dõi phím đang nhấn
+    
+    // Hàm xử lý chung cho cả keydown và keypress
+    function handleKeyPress(e, isDown) {
+        debugLog(`${isDown ? 'KeyDown' : 'KeyUp'}: "${e.key}" | Code: ${e.code} | KeyCode: ${e.keyCode}`);
         
         if (controlMode !== 'keyboard') return;
         
@@ -437,39 +440,53 @@
         }
         
         e.preventDefault();
-        const btn = document.getElementById(btnId);
-        if (!btn || btn.classList.contains('active')) return;
+        e.stopPropagation();
         
-        btn.classList.add('active');
-        debugLog(`✓ ${btnId} pressed`);
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        
+        if (isDown) {
+            // Tránh lặp lại khi giữ phím
+            if (pressedKeys.has(btnId)) return;
+            pressedKeys.add(btnId);
+            
+            btn.classList.add('active');
+            debugLog(`✓ ${btnId} pressed`);
 
-        if (btnId === 'btn-back') {
-            quitGame();
-            return;
+            if (btnId === 'btn-back') {
+                quitGame();
+                return;
+            }
+
+            if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
+                nes.buttonDown(1, BTN_MAP[btnId]);
+                debugLog(`✓ NES button ${BTN_MAP[btnId]} DOWN`);
+            }
+        } else {
+            pressedKeys.delete(btnId);
+            btn.classList.remove('active');
+            
+            if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
+                nes.buttonUp(1, BTN_MAP[btnId]);
+                debugLog(`✓ NES button ${BTN_MAP[btnId]} UP`);
+            }
         }
-
-        if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
-            nes.buttonDown(1, BTN_MAP[btnId]);
-            debugLog(`✓ NES button ${BTN_MAP[btnId]} DOWN`);
+    }
+    
+    // Lắng nghe cả keydown, keypress VÀ keyup
+    document.addEventListener('keydown', (e) => {
+        handleKeyPress(e, true);
+    });
+    
+    document.addEventListener('keypress', (e) => {
+        // Keypress dự phòng cho BlackBerry
+        if (controlMode === 'keyboard' && !pressedKeys.has(KEYBOARD_MAP[e.key])) {
+            handleKeyPress(e, true);
         }
     });
 
     document.addEventListener('keyup', (e) => {
-        if (controlMode !== 'keyboard') return;
-        
-        const btnId = KEYBOARD_MAP[e.key];
-        if (!btnId) return;
-        
-        e.preventDefault();
-        const btn = document.getElementById(btnId);
-        if (!btn) return;
-        
-        btn.classList.remove('active');
-        
-        if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
-            nes.buttonUp(1, BTN_MAP[btnId]);
-            debugLog(`✓ NES button ${BTN_MAP[btnId]} UP`);
-        }
+        handleKeyPress(e, false);
     });
 
     // XỬ LÝ TOUCH/MOUSE (GIỮ NGUYÊN)
