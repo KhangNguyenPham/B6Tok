@@ -439,6 +439,7 @@
         const btn = document.getElementById(btnId);
         if (!btn) return;
 
+        // clear timeout cũ
         if (pressedKeys.has(btnId)) {
             clearTimeout(pressedKeys.get(btnId));
         }
@@ -450,19 +451,30 @@
             return;
         }
 
-        if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
-            nes.buttonDown(1, BTN_MAP[btnId]);
-            debugLog(`DOWN ${BTN_MAP[btnId]}`);
+        const nesBtn = BTN_MAP[btnId];
+        let didPress = false;
+
+        // ⚠️ QUAN TRỌNG: DOWN luôn chạy trước
+        if (!handleMenuInput(btnId) && nesBtn !== null && nes) {
+            nes.buttonDown(1, nesBtn);
+            didPress = true;
+            debugLog(`DOWN: ${nesBtn}`);
         }
+
+        // START cần giữ lâu hơn
+        const releaseDelay = (btnId === 'btn-start') ? 350 : 250;
 
         const timeout = setTimeout(() => {
             btn.classList.remove('active');
-            if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
-                nes.buttonUp(1, BTN_MAP[btnId]);
-                debugLog(`UP ${BTN_MAP[btnId]}`);
+
+            // ⚠️ CHỈ UP NẾU ĐÃ DOWN
+            if (didPress && nes && nesBtn !== null) {
+                nes.buttonUp(1, nesBtn);
+                debugLog(`UP: ${nesBtn}`);
             }
+
             pressedKeys.delete(btnId);
-        }, 250);
+        }, releaseDelay);
 
         pressedKeys.set(btnId, timeout);
     }
