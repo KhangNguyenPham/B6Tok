@@ -249,7 +249,7 @@
         }
         container.innerHTML = romFiles.map((name, index) => `
             <div class="rom-item ${index === selectedIndex ? 'selected' : ''}" 
-                 onclick="selectedIndex=${index}; launch('${name}')">
+                onclick="selectedIndex=${index}; launch('${name}')">
                 ${name.replace('.nes', '').toUpperCase()}
             </div>
         `).join('');
@@ -296,8 +296,74 @@
     }
 
     // 3. KHỞI TẠO ĐIỀU KHIỂN
-    const BTN_MAP = { 'btn-a': 0, 'btn-b': 1, 'btn-select': 2, 'btn-start': 3, 'btn-up': 4, 'btn-down': 5, 'btn-left': 6, 'btn-right': 7, 'btn-back': null };
+    const BTN_MAP = { 
+        'btn-a': 0, 
+        'btn-b': 1, 
+        'btn-select': 2, 
+        'btn-start': 3, 
+        'btn-up': 4, 
+        'btn-down': 5, 
+        'btn-left': 6, 
+        'btn-right': 7, 
+        'btn-back': null 
+    };
 
+    // MAP PHÍM CỨNG CHO BLACKBERRY Q20
+    const KEYBOARD_MAP = {
+        'ArrowUp': 'btn-up',
+        'ArrowDown': 'btn-down',
+        'ArrowLeft': 'btn-left',
+        'ArrowRight': 'btn-right',
+        'Enter': 'btn-start',      // Phím Enter = START
+        'Backspace': 'btn-back',   // Phím Backspace = QUIT
+        ' ': 'btn-a',              // Phím Space = A
+        'Shift': 'btn-b',          // Phím Shift = B
+        'Alt': 'btn-select',       // Phím Alt = SELECT
+        // Thêm các phím chữ cho linh hoạt
+        'z': 'btn-a',
+        'x': 'btn-b',
+        's': 'btn-select',
+        'a': 'btn-start',
+        'q': 'btn-back'
+    };
+
+    // XỬ LÝ BÀN PHÍM CỨNG
+    document.addEventListener('keydown', (e) => {
+        const btnId = KEYBOARD_MAP[e.key];
+        if (!btnId) return;
+        
+        e.preventDefault();
+        const btn = document.getElementById(btnId);
+        if (!btn || btn.classList.contains('active')) return;
+        
+        btn.classList.add('active');
+
+        if (btnId === 'btn-back') {
+            quitGame();
+            return;
+        }
+
+        if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
+            nes.buttonDown(1, BTN_MAP[btnId]);
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        const btnId = KEYBOARD_MAP[e.key];
+        if (!btnId) return;
+        
+        e.preventDefault();
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        
+        btn.classList.remove('active');
+        
+        if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
+            nes.buttonUp(1, BTN_MAP[btnId]);
+        }
+    });
+
+    // XỬ LÝ TOUCH/MOUSE (GIỮ NGUYÊN)
     Object.keys(BTN_MAP).forEach(btnId => {
         const btn = document.getElementById(btnId);
         if (!btn) return;
