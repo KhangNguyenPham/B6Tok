@@ -28,6 +28,17 @@
         
         .header a { color: #e94560; text-decoration: none; font-weight: bold; font-size: 14px; }
         
+        #control-mode {
+            padding: 5px 10px;
+            background: #0a0a12;
+            color: #e94560;
+            border: 1px solid #e94560;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
         /* EMULATOR SCREEN */
         #game-canvas { 
             width: 100%;
@@ -191,6 +202,10 @@
 
 <div class="header">
     <a href="/">Trang chủ</a>
+    <select id="control-mode">
+        <option value="touch">Màn hình cảm ứng</option>
+        <option value="keyboard">Bàn phím vật lý</option>
+    </select>
 </div>
 
 <div id="game-canvas">
@@ -229,6 +244,25 @@
     let gameLoaded = false;
     let romFiles = [];
     let selectedIndex = 0;
+    let controlMode = 'touch'; // Mặc định là touch
+
+    // LẤY CHỂ ĐỘ ĐIỀU KHIỂN
+    const modeSelector = document.getElementById('control-mode');
+    modeSelector.addEventListener('change', (e) => {
+        controlMode = e.target.value;
+        updateControlsVisibility();
+    });
+
+    function updateControlsVisibility() {
+        const controlsContainer = document.querySelector('.controls-container');
+        if (controlMode === 'keyboard' && !gameLoaded) {
+            controlsContainer.style.display = 'none';
+        } else if (controlMode === 'keyboard' && gameLoaded) {
+            controlsContainer.style.display = 'flex';
+        } else {
+            controlsContainer.style.display = 'flex';
+        }
+    }
 
     // 1. LOAD DANH SÁCH GAME
     async function loadRomList() {
@@ -242,14 +276,23 @@
     }
 
     function renderRomSelector() {
+        updateControlsVisibility();
+        
         const container = document.getElementById('rom-list-container');
         if (romFiles.length === 0) {
             container.innerHTML = "<div style='text-align:center'>No ROMs found in /public/roms</div>";
             return;
         }
-        container.innerHTML = romFiles.map((name, index) => `
+        
+        // HƯỚNG DẪN PHÍM (CHỈ HIỆN KHI DÙNG BÀN PHÍM VẬT LÝ)
+        const guide = controlMode === 'keyboard' ? `<div style='padding:10px; background:rgba(233,69,96,0.2); border-radius:6px; margin-bottom:10px; font-size:11px; line-height:1.6;'>
+            <div style='color:#e94560; font-weight:bold; margin-bottom:5px;'>⌨️ HƯỚNG DẪN PHÍM:</div>
+            <div>W/S = Di chuyển | ENTER = Chọn game</div>
+        </div>` : '';
+        
+        container.innerHTML = guide + romFiles.map((name, index) => `
             <div class="rom-item ${index === selectedIndex ? 'selected' : ''}" 
-                onclick="selectedIndex=${index}; launch('${name}')">
+                 onclick="selectedIndex=${index}; launch('${name}')">
                 ${name.replace('.nes', '').toUpperCase()}
             </div>
         `).join('');
@@ -308,27 +351,23 @@
         'btn-back': null 
     };
 
-    // MAP PHÍM CỨNG CHO BLACKBERRY Q20
+    // MAP PHÍM CỨNG CHO BLACKBERRY Q20 VÀ BÀN PHÍM VẬT LÝ
     const KEYBOARD_MAP = {
-        'ArrowUp': 'btn-up',
-        'ArrowDown': 'btn-down',
-        'ArrowLeft': 'btn-left',
-        'ArrowRight': 'btn-right',
-        'Enter': 'btn-start',      // Phím Enter = START
-        'Backspace': 'btn-back',   // Phím Backspace = QUIT
-        ' ': 'btn-a',              // Phím Space = A
-        'Shift': 'btn-b',          // Phím Shift = B
-        'Alt': 'btn-select',       // Phím Alt = SELECT
-        // Thêm các phím chữ cho linh hoạt
-        'z': 'btn-a',
-        'x': 'btn-b',
-        's': 'btn-select',
-        'a': 'btn-start',
-        'q': 'btn-back'
+        'w': 'btn-up',           // W = Lên
+        's': 'btn-down',         // S = Xuống
+        'a': 'btn-left',         // A = Trái
+        'd': 'btn-right',        // D = Phải
+        'Enter': 'btn-start',    // Enter = START
+        'q': 'btn-back',         // Q = QUIT
+        'k': 'btn-a',            // K = A
+        'l': 'btn-b',            // L = B
+        ' ': 'btn-select'        // Space = SELECT
     };
 
-    // XỬ LÝ BÀN PHÍM CỨNG
+    // XỬ LÝ BÀN PHÍM CỨNG (CHỈ KHI CHỌN CHỂ ĐỘ KEYBOARD)
     document.addEventListener('keydown', (e) => {
+        if (controlMode !== 'keyboard') return; // Chỉ xử lý khi ở chế độ keyboard
+        
         const btnId = KEYBOARD_MAP[e.key];
         if (!btnId) return;
         
@@ -349,6 +388,8 @@
     });
 
     document.addEventListener('keyup', (e) => {
+        if (controlMode !== 'keyboard') return; // Chỉ xử lý khi ở chế độ keyboard
+        
         const btnId = KEYBOARD_MAP[e.key];
         if (!btnId) return;
         
@@ -399,6 +440,8 @@
 
     // 4. HÀM CHẠY GAME
     function launch(romName) {
+        updateControlsVisibility(); // Cập nhật hiển thị controls khi vào game
+        
         const canvasContainer = document.getElementById('game-canvas');
         canvasContainer.innerHTML = '<canvas width="256" height="240"></canvas>';
         
