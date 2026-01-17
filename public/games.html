@@ -256,69 +256,64 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
 <script>
+    /* ===============================
+    GLOBAL STATE
+    ================================ */
     let nes = null;
     let gameLoop = null;
     let gameLoaded = false;
+    let loading = false;
+
     let romFiles = [];
     let selectedIndex = 0;
-    let controlMode = 'touch'; // Mặc định là touch
-    let debugMode = false; // Debug mode
-    
-    // DEBUG FUNCTION
+
+    let controlMode = 'touch'; // touch | keyboard
+    let debugMode = false;
+
+    /* ===============================
+    DEBUG
+    ================================ */
     function debugLog(msg) {
+        if (!debugMode) return;
         const panel = document.getElementById('debug-panel');
-        if (debugMode) {
-            panel.style.display = 'block';
-            panel.textContent = msg;
-        }
+        if (!panel) return;
+        panel.style.display = 'block';
+        panel.textContent = msg;
     }
-    
-    // Bật debug mode khi nhấn phím 7 ba lần liên tiếp (dễ hơn)
+
+    // bật debug khi nhấn phím 7 ba lần nhanh
     let debugKeyCount = 0;
     let debugTimeout = null;
-    document.addEventListener('keypress', (e) => {
-        if (e.key === '7') {
-            debugKeyCount++;
-            clearTimeout(debugTimeout);
-            debugTimeout = setTimeout(() => { debugKeyCount = 0; }, 1000);
-            
-            if (debugKeyCount >= 3) {
-                debugMode = !debugMode;
-                document.getElementById('debug-panel').style.display = debugMode ? 'block' : 'none';
-                if (debugMode) {
-                    debugLog('🔍 DEBUG MODE: ON - Bấm phím để xem mã');
-                } else {
-                    document.getElementById('debug-panel').textContent = '';
-                }
-                debugKeyCount = 0;
-            }
-        }
-    });
 
-    // LẤY CHỂ ĐỘ ĐIỀU KHIỂN
+    /* ===============================
+    CONTROL MODE
+    ================================ */
     const modeSelector = document.getElementById('control-mode');
     modeSelector.addEventListener('change', (e) => {
         controlMode = e.target.value;
         updateControlsVisibility();
-        if (!gameLoaded) {
-            renderRomSelector(); // Render lại danh sách khi đổi chế độ
-        }
+        if (!gameLoaded) renderRomSelector();
     });
 
     function updateControlsVisibility() {
-        const controlsContainer = document.querySelector('.controls-container');
+        const controls = document.querySelector('.controls-container');
+        if (!controls) return;
+
         if (controlMode === 'keyboard' && !gameLoaded) {
-            controlsContainer.style.display = 'none';
+            controls.style.display = 'none';
         } else {
-            controlsContainer.style.display = 'flex';
+            controls.style.display = 'flex';
         }
     }
 
-    // 1. LOAD DANH SÁCH GAME
+    /* ===============================
+    LOAD ROM LIST
+    ================================ */
     async function loadRomList() {
         try {
             const res = await fetch('/api/roms');
             romFiles = await res.json();
+            selectedIndex = 0;
             renderRomSelector();
         } catch (e) {
             document.getElementById('status').innerHTML = "API Error";
@@ -327,279 +322,290 @@
 
     function renderRomSelector() {
         updateControlsVisibility();
-        
+
         const container = document.getElementById('rom-list-container');
+        if (!container) return;
+
         if (romFiles.length === 0) {
-            container.innerHTML = "<div style='text-align:center'>No ROMs found in /public/roms</div>";
+            container.innerHTML = "<div style='text-align:center'>No ROMs found</div>";
             return;
         }
-        
-        // HƯỚNG DẪN PHÍM (CHỈ HIỆN KHI DÙNG BÀN PHÍM VẬT LÝ)
-        const guide = controlMode === 'keyboard' ? `<div style='padding:10px; background:rgba(233,69,96,0.2); border-radius:6px; margin-bottom:10px; font-size:10px; line-height:1.5;'>
-            <div style='color:#e94560; font-weight:bold; margin-bottom:5px;'>⌨️ PHÍM ĐIỀU KHIỂN:</div>
-            <div>W/S hoặc ↑↓ = Di chuyển</div>
-            <div>ENTER/9/0 = START chọn game</div>
-            <div>---</div>
-            <div style='color:#888; font-size:9px;'>Trong game: WASD=Move | K/Z/1=A | L/X/3=B | SPACE=Select | Q=Quit</div>
-            <div style='color:#0f0; font-size:9px; margin-top:3px;'>💡 Bấm phím 7 ba lần nhanh để bật DEBUG</div>
-        </div>` : '';
-        
-        container.innerHTML = guide + romFiles.map((name, index) => `
-            <div class="rom-item ${index === selectedIndex ? 'selected' : ''}" 
-                 onclick="selectedIndex=${index}; launch('${name}')">
-                ${name.replace('.nes', '').toUpperCase()}
-            </div>
-        `).join('');
-        
-        const selected = container.querySelector('.selected');
-        if (selected) selected.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+        const guide = controlMode === 'keyboard'
+            ? `<div style="padding:10px;background:rgba(233,69,96,.2);border-radius:6px;margin-bottom:10px;font-size:10px">
+                <b style="color:#e94560">PHÍM:</b><br>
+                W/S ↑↓ = chọn<br>
+                ENTER / 9 / 0 = START<br>
+                <span style="font-size:9px;color:#aaa">Trong game: WASD | K/Z=A | L/X=B | Q=Quit</span><br>
+                <span style="font-size:9px;color:#0f0">Bấm 7 x3 để bật DEBUG</span>
+            </div>`
+            : '';
+
+        container.innerHTML =
+            guide +
+            romFiles.map((name, i) => `
+                <div class="rom-item ${i === selectedIndex ? 'selected' : ''}"
+                    onclick="selectedIndex=${i}; launch('${name}')">
+                    ${name.replace('.nes','').toUpperCase()}
+                </div>
+            `).join('');
+
+        const sel = container.querySelector('.selected');
+        if (sel) sel.scrollIntoView({ block: 'nearest' });
     }
 
+    /* ===============================
+    QUIT GAME
+    ================================ */
     function quitGame() {
-        if (gameLoaded) {
-            clearInterval(gameLoop);
-            gameLoop = null;
-            gameLoaded = false;
-            nes = null; 
+        if (!gameLoaded) return;
 
-            document.getElementById('game-canvas').innerHTML = `
-                <div id="rom-selector">
-                    <div class="selector-header">CHỌN GAME</div>
-                    <div id="rom-list-container"></div>
-                </div>`;
-            
-            renderRomSelector();
-        }
+        clearInterval(gameLoop);
+        gameLoop = null;
+        gameLoaded = false;
+        nes = null;
+
+        document.getElementById('game-canvas').innerHTML = `
+            <div id="rom-selector">
+                <div class="selector-header">CHỌN GAME</div>
+                <div id="rom-list-container"></div>
+            </div>`;
+
+        renderRomSelector();
     }
 
-    // 2. LOGIC MENU (CHỈ CHẠY KHI CHƯA VÀO GAME)
+    /* ===============================
+    MENU INPUT
+    ================================ */
     function handleMenuInput(btnId) {
         if (gameLoaded) return false;
+
         if (btnId === 'btn-up') {
             selectedIndex = (selectedIndex - 1 + romFiles.length) % romFiles.length;
             renderRomSelector();
             return true;
         }
+
         if (btnId === 'btn-down') {
             selectedIndex = (selectedIndex + 1) % romFiles.length;
             renderRomSelector();
             return true;
         }
+
         if (btnId === 'btn-start' || btnId === 'btn-a') {
             if (romFiles[selectedIndex]) launch(romFiles[selectedIndex]);
             return true;
         }
+
         return false;
     }
 
-    // 3. KHỞI TẠO ĐIỀU KHIỂN
-    const BTN_MAP = { 
-        'btn-a': 0, 
-        'btn-b': 1, 
-        'btn-select': 2, 
-        'btn-start': 3, 
-        'btn-up': 4, 
-        'btn-down': 5, 
-        'btn-left': 6, 
-        'btn-right': 7, 
-        'btn-back': null 
+    /* ===============================
+    BUTTON MAP
+    ================================ */
+    const BTN_MAP = {
+        'btn-a': 0,
+        'btn-b': 1,
+        'btn-select': 2,
+        'btn-start': 3,
+        'btn-up': 4,
+        'btn-down': 5,
+        'btn-left': 6,
+        'btn-right': 7,
+        'btn-back': null
     };
 
-    // MAP PHÍM CỨNG CHO BLACKBERRY Q20 VÀ BÀN PHÍM VẬT LÝ
-    // THÊM NHIỀU PHÍM DỰ PHÒNG VÌ BLACKBERRY CÓ THỂ GỬI MÃ KHÁC
     const KEYBOARD_MAP = {
-        // Phím di chuyển - nhiều lựa chọn
-        'w': 'btn-up', 'W': 'btn-up', 'ArrowUp': 'btn-up', '8': 'btn-up',
-        's': 'btn-down', 'S': 'btn-down', 'ArrowDown': 'btn-down', '2': 'btn-down',
-        'a': 'btn-left', 'A': 'btn-left', 'ArrowLeft': 'btn-left', '4': 'btn-left',
-        'd': 'btn-right', 'D': 'btn-right', 'ArrowRight': 'btn-right', '6': 'btn-right',
-        
-        // Phím hành động - nhiều lựa chọn
-        'k': 'btn-a', 'K': 'btn-a', 'z': 'btn-a', 'Z': 'btn-a', '1': 'btn-a',
-        'l': 'btn-b', 'L': 'btn-b', 'x': 'btn-b', 'X': 'btn-b', '3': 'btn-b',
-        
-        // Phím điều khiển
-        ' ': 'btn-select', 'Shift': 'btn-select', '5': 'btn-select',
-        'Enter': 'btn-start', '9': 'btn-start', '0': 'btn-start',
-        'q': 'btn-back', 'Q': 'btn-back', 'Escape': 'btn-back'
+        w:'btn-up', W:'btn-up', ArrowUp:'btn-up', '8':'btn-up',
+        s:'btn-down', S:'btn-down', ArrowDown:'btn-down', '2':'btn-down',
+        a:'btn-left', A:'btn-left', ArrowLeft:'btn-left', '4':'btn-left',
+        d:'btn-right', D:'btn-right', ArrowRight:'btn-right', '6':'btn-right',
+
+        k:'btn-a', K:'btn-a', z:'btn-a', Z:'btn-a', '1':'btn-a',
+        l:'btn-b', L:'btn-b', x:'btn-b', X:'btn-b', '3':'btn-b',
+
+        ' ':'btn-select', Shift:'btn-select', '5':'btn-select',
+        Enter:'btn-start', '9':'btn-start', '0':'btn-start',
+
+        q:'btn-back', Q:'btn-back', Escape:'btn-back'
     };
 
-    // XỬ LÝ BÀN PHÍM CỨNG (CHỈ KHI CHỌN CHỂ ĐỘ KEYBOARD)
-    const pressedKeys = new Map(); // Lưu timeout cho mỗi phím
-    
-    // Hàm trigger DOWN và tự động UP (dành cho BlackBerry)
+    const pressedKeys = new Map();
+
+    /* ===============================
+    SIMULATE PRESS (BlackBerry)
+    ================================ */
     function simulateButtonPress(btnId) {
         const btn = document.getElementById(btnId);
         if (!btn) return;
-        
-        // Clear timeout cũ nếu có
+
         if (pressedKeys.has(btnId)) {
             clearTimeout(pressedKeys.get(btnId));
         }
-        
-        // Kích hoạt DOWN
+
         btn.classList.add('active');
-        
+
         if (btnId === 'btn-back') {
             quitGame();
             return;
         }
-        
+
         if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
             nes.buttonDown(1, BTN_MAP[btnId]);
-            debugLog(`✓ NES DOWN: ${BTN_MAP[btnId]}`);
+            debugLog(`DOWN ${BTN_MAP[btnId]}`);
         }
-        
-        // Tự động UP sau 100ms
+
         const timeout = setTimeout(() => {
             btn.classList.remove('active');
             if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
                 nes.buttonUp(1, BTN_MAP[btnId]);
-                debugLog(`✓ NES UP: ${BTN_MAP[btnId]}`);
+                debugLog(`UP ${BTN_MAP[btnId]}`);
             }
             pressedKeys.delete(btnId);
-        }, 100);
-        
+        }, 250);
+
         pressedKeys.set(btnId, timeout);
     }
-    
-    // Lắng nghe KEYPRESS (vì BlackBerry chỉ gửi event này)
+
+    /* ===============================
+    KEYBOARD HANDLER (ONE PLACE)
+    ================================ */
     document.addEventListener('keypress', (e) => {
-        if (controlMode !== 'keyboard') return;
-        
-        debugLog(`KeyPress: "${e.key}" | Code: ${e.code} | Char: ${e.charCode}`);
-        
-        const btnId = KEYBOARD_MAP[e.key];
-        if (!btnId) {
-            debugLog(`⚠️ Unmapped: "${e.key}"`);
+        // DEBUG TOGGLE
+        if (e.key === '7') {
+            debugKeyCount++;
+            clearTimeout(debugTimeout);
+            debugTimeout = setTimeout(() => debugKeyCount = 0, 800);
+            if (debugKeyCount >= 3) {
+                debugMode = !debugMode;
+                debugKeyCount = 0;
+                debugLog('DEBUG MODE ON');
+            }
             return;
         }
-        
+
+        if (controlMode !== 'keyboard') return;
+
+        debugLog(`KeyPress ${e.key}`);
+
+        const btnId = KEYBOARD_MAP[e.key];
+        if (!btnId) return;
+
         e.preventDefault();
-        e.stopPropagation();
-        
         simulateButtonPress(btnId);
     });
-    
-    // Vẫn giữ keydown/keyup cho các thiết bị khác
+
+    // fallback desktop
     document.addEventListener('keydown', (e) => {
         if (controlMode !== 'keyboard') return;
-        
+
         const btnId = KEYBOARD_MAP[e.key];
         if (!btnId || pressedKeys.has(btnId)) return;
-        
+
         e.preventDefault();
+        pressedKeys.set(btnId, true);
+
         const btn = document.getElementById(btnId);
-        if (!btn) return;
-        
-        btn.classList.add('active');
-        
-        if (btnId === 'btn-back') {
-            quitGame();
-            return;
-        }
-        
+        if (btn) btn.classList.add('active');
+
+        if (btnId === 'btn-back') return quitGame();
+
         if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
             nes.buttonDown(1, BTN_MAP[btnId]);
-            debugLog(`✓ DOWN: ${BTN_MAP[btnId]}`);
         }
-        
-        pressedKeys.set(btnId, 'keydown');
     });
 
     document.addEventListener('keyup', (e) => {
         if (controlMode !== 'keyboard') return;
-        
+
         const btnId = KEYBOARD_MAP[e.key];
         if (!btnId) return;
-        
+
         e.preventDefault();
+        pressedKeys.delete(btnId);
+
         const btn = document.getElementById(btnId);
-        if (!btn) return;
-        
-        btn.classList.remove('active');
-        
+        if (btn) btn.classList.remove('active');
+
         if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
             nes.buttonUp(1, BTN_MAP[btnId]);
-            debugLog(`✓ UP: ${BTN_MAP[btnId]}`);
         }
-        
-        pressedKeys.delete(btnId);
     });
 
-    // XỬ LÝ TOUCH/MOUSE (GIỮ NGUYÊN)
+    /* ===============================
+    TOUCH / MOUSE
+    ================================ */
     Object.keys(BTN_MAP).forEach(btnId => {
         const btn = document.getElementById(btnId);
         if (!btn) return;
 
-        const onDown = (e) => {
+        const down = e => {
             e.preventDefault();
             btn.classList.add('active');
 
-            if (btnId === 'btn-back') {
-                quitGame();
-                return;
-            }
+            if (btnId === 'btn-back') return quitGame();
 
-            if (!handleMenuInput(btnId) && gameLoaded && nes) {
+            if (!handleMenuInput(btnId) && gameLoaded && nes && BTN_MAP[btnId] !== null) {
                 nes.buttonDown(1, BTN_MAP[btnId]);
             }
         };
 
-        const onUp = (e) => {
+        const up = e => {
             e.preventDefault();
             btn.classList.remove('active');
-            
             if (gameLoaded && nes && BTN_MAP[btnId] !== null) {
                 nes.buttonUp(1, BTN_MAP[btnId]);
             }
         };
 
-        btn.addEventListener('touchstart', onDown, { passive: false });
-        btn.addEventListener('touchend', onUp, { passive: false });
-        btn.addEventListener('mousedown', onDown);
-        btn.addEventListener('mouseup', onUp);
+        btn.addEventListener('touchstart', down, { passive:false });
+        btn.addEventListener('touchend', up, { passive:false });
+        btn.addEventListener('mousedown', down);
+        btn.addEventListener('mouseup', up);
     });
 
-    // 4. HÀM CHẠY GAME
+    /* ===============================
+    LAUNCH GAME
+    ================================ */
     function launch(romName) {
-        updateControlsVisibility(); // Cập nhật hiển thị controls khi vào game
-        
-        const canvasContainer = document.getElementById('game-canvas');
-        canvasContainer.innerHTML = '<canvas width="256" height="240"></canvas>';
-        
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioCtx();
+        if (loading) return;
+        loading = true;
+
+        updateControlsVisibility();
+
+        const container = document.getElementById('game-canvas');
+        container.innerHTML = '<canvas width="256" height="240"></canvas>';
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let audioBuffer = [];
 
         nes = new jsnes.NES({
-            onFrame: (frameBuffer) => {
-                const canvas = canvasContainer.querySelector('canvas');
-                if (!canvas || !gameLoaded) return;
+            onFrame(frame) {
+                if (!gameLoaded) return;
+                const canvas = container.querySelector('canvas');
                 const ctx = canvas.getContext('2d');
-                const imageData = ctx.getImageData(0, 0, 256, 240);
-                const pixels = imageData.data;
-                for (let i = 0; i < frameBuffer.length; i++) {
-                    const pixel = frameBuffer[i];
-                    pixels[i * 4] = pixel & 0xFF;
-                    pixels[i * 4 + 1] = (pixel >> 8) & 0xFF;
-                    pixels[i * 4 + 2] = (pixel >> 16) & 0xFF;
-                    pixels[i * 4 + 3] = 0xFF;
+                const img = ctx.getImageData(0,0,256,240);
+                for (let i=0;i<frame.length;i++){
+                    img.data[i*4]   = frame[i]&255;
+                    img.data[i*4+1] = (frame[i]>>8)&255;
+                    img.data[i*4+2] = (frame[i]>>16)&255;
+                    img.data[i*4+3] = 255;
                 }
-                ctx.putImageData(imageData, 0, 0);
+                ctx.putImageData(img,0,0);
             },
-
-            onAudioSample: (left, right) => {
-                audioBuffer.push(left, right);
-                if (audioBuffer.length >= 4096) {
-                    const buffer = audioCtx.createBuffer(2, 2048, 44100);
-                    buffer.getChannelData(0).set(audioBuffer.filter((_,i) => i%2===0));
-                    buffer.getChannelData(1).set(audioBuffer.filter((_,i) => i%2!==0));
-                    const source = audioCtx.createBufferSource();
-                    source.buffer = buffer;
-                    source.connect(audioCtx.destination);
-                    source.start();
-                    audioBuffer = [];
+            onAudioSample(l,r){
+                audioBuffer.push(l,r);
+                if (audioBuffer.length>=4096){
+                    const buf=audioCtx.createBuffer(2,2048,44100);
+                    for(let i=0;i<2048;i++){
+                        buf.getChannelData(0)[i]=audioBuffer[i*2];
+                        buf.getChannelData(1)[i]=audioBuffer[i*2+1];
+                    }
+                    const src=audioCtx.createBufferSource();
+                    src.buffer=buf;
+                    src.connect(audioCtx.destination);
+                    src.start();
+                    audioBuffer=[];
                 }
             }
         });
@@ -607,17 +613,13 @@
         const xhr = new XMLHttpRequest();
         xhr.open("GET", '/roms/' + romName);
         xhr.overrideMimeType("text/plain; charset=x-user-defined");
-        xhr.onload = function() {
-            if (this.status === 200) {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
+        xhr.onload = function(){
+            if(this.status===200){
+                audioCtx.resume();
                 nes.loadROM(this.responseText);
                 gameLoaded = true;
-                if (gameLoop) clearInterval(gameLoop);
-                gameLoop = setInterval(() => {
-                    if (gameLoaded && nes) nes.frame();
-                }, 17);
+                loading = false;
+                gameLoop = setInterval(()=>nes.frame(),17);
             }
         };
         xhr.send();
@@ -625,5 +627,6 @@
 
     loadRomList();
 </script>
+
 </body>
 </html>
